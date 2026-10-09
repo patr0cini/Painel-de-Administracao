@@ -10,7 +10,7 @@
     var c=el('pa-entrada');
     if(!c){c=document.createElement('div');c.id='pa-entrada';c.setAttribute('role','dialog');c.setAttribute('aria-label','Entrar no painel');
       c.style.cssText='position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;background:#1E2B19;font-family:"Source Sans 3","Segoe UI",sans-serif';document.body.appendChild(c)}
-    c.innerHTML='<div style="background:#fff;color:#22281C;border-radius:14px;padding:28px;max-width:380px;width:100%"><div style="font-family:Jost,sans-serif;font-size:24px;font-weight:600">We Garden</div><div style="color:#5A5B5D;margin-bottom:18px">Painel da Administração</div>'+html+'</div>';
+    c.innerHTML='<div style="background:#fff;color:#22281C;border-radius:14px;padding:28px;max-width:380px;width:100%"><img src="logo.png" alt="We Garden" style="display:block;width:220px;max-width:80%;height:auto;margin:0 0 10px -6px"><div style="color:#5A5B5D;margin-bottom:18px">Painel da Administração</div>'+html+'</div>';
     return c;
   }
   function fechar(){var c=el('pa-entrada');if(c)c.remove()}
