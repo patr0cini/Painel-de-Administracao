@@ -139,23 +139,46 @@ code{font-family:ui-monospace,Menlo,monospace;background:var(--poco);padding:1px
 .nomef{background:none;border:0;padding:0;text-align:left;font:inherit;font-weight:600;font-size:14px;color:inherit;cursor:pointer;text-decoration:underline dotted var(--borda-ctl);text-underline-offset:3px}
 .nomef.on{color:var(--verde-txt)} .cel[data-fn]{cursor:pointer} .cel[data-fn]:hover{outline:2px solid var(--verde-esc)}
 .cel.baixa,.lg.baixa{background:var(--aviso-linha)}
+#mbtn,#mtit{display:none}
 @media (max-width:760px){
-  /* telemóvel: menu numa só linha deslizante, fixo no topo; indicadores a duas colunas */
-  nav{max-width:none;flex-basis:100%;padding:10px 16px;gap:8px;position:sticky;top:env(safe-area-inset-top,0px);z-index:10}
-  .marca{flex-direction:row;align-items:baseline;gap:10px;padding:0} .marca b{font-size:18px} .marca span{font-size:12px}
-  .menu{flex-direction:row;flex-wrap:nowrap;overflow-x:auto;gap:4px;margin:0 -16px;padding:0 16px;scrollbar-width:none}
-  .menu::-webkit-scrollbar{display:none}
-  .menu a{flex:0 0 auto;white-space:nowrap;min-height:40px;padding:0 12px;font-size:14px}
-  .rodape{flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-top:0;padding:0;font-size:12px;gap:8px}
-  .rodape br{display:none} .rodape b{margin-left:4px} #prox{display:none}
-  main{padding:18px 16px 40px;gap:18px} h1{font-size:26px} h2{font-size:18px}
+  /* telemóvel: barra de topo de uma linha com botão de menu; o menu abre em ecrã inteiro.
+     Os cartões com título dobram-se e só o primeiro de cada ecrã começa aberto. */
+  nav{max-width:none;flex-basis:100%;padding:8px 16px;gap:0;position:sticky;top:0;z-index:10;flex-direction:row;flex-wrap:wrap;align-items:center}
+  .marca{flex-direction:row;align-items:baseline;gap:10px;padding:0;flex:1 1 auto;min-width:0} .marca b{font-size:18px} .marca span{display:none}
+  #mtit{display:block;color:var(--noite-mute);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #mbtn{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border-radius:8px;border:1px solid var(--noite-off);background:transparent;color:var(--noite-txt);font:inherit;font-size:15px;cursor:pointer}
+  .menu,.rodape{display:none}
+  nav.aberto{position:fixed;inset:0;align-content:flex-start;overflow-y:auto;padding-bottom:32px}
+  nav.aberto .menu{display:flex;flex-direction:column;flex-basis:100%;gap:2px;margin-top:12px}
+  nav.aberto .menu a{min-height:48px;font-size:17px}
+  nav.aberto .rodape{display:flex;flex-basis:100%;margin-top:18px;padding:14px 12px 0;border-top:1px solid var(--noite-off);font-size:13px;gap:8px}
+  #prox{display:none}
+  main{padding:16px 14px 72px;gap:14px} h1{font-size:24px} h2{font-size:17px}
+  .topo{gap:10px} .topo .seg,.topo .ctl{font-size:14px}
   .grelha{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px}
-  .cartao{padding:16px} .kpi{padding:12px 14px} .kpi .n{font-size:20px} .kpi .d{font-size:12px}
+  main>section.grelha.curta>.kpi:nth-child(n+5){display:none}
+  .mais{min-height:44px;border-radius:8px;border:1px dashed var(--borda-ctl);background:transparent;color:var(--verde-txt);font:inherit;cursor:pointer;margin-top:-4px}
+  .cartao{padding:14px} .kpi{padding:12px} .kpi .n{font-size:19px} .kpi .d{font-size:12px}
   .poco span{font-size:17px} .quatro{gap:8px}
   .form{grid-template-columns:1fr} .linha2{gap:14px} .linha2>*{flex-basis:100%}
   .seg button,.ctl{min-height:44px}
   dl{grid-template-columns:1fr;gap:2px 0} dd{margin-bottom:10px}
+  .dobra .dobra-t{cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .dobra .dobra-t h2,.dobra h2.dobra-t{display:flex;align-items:center;justify-content:space-between;gap:10px;flex:1 1 auto}
+  .dobra .dobra-t h2::after,.dobra h2.dobra-t::after{content:'';flex:0 0 auto;width:9px;height:9px;border-right:2px solid var(--mute);border-bottom:2px solid var(--mute);transform:rotate(-135deg);margin:4px 4px 0 0;transition:transform .15s}
+  .dobra.fechada .dobra-t h2::after,.dobra.fechada h2.dobra-t::after{transform:rotate(45deg);margin-top:-4px}
+  .dobra.fechada>*:not(.dobra-t){display:none!important}
+  .dobra.fechada .dobra-t{margin-bottom:0} .dobra.fechada .dobra-t .seg,.dobra.fechada .dobra-t .ctl{display:none}
+  .dobra.fechada{padding-top:12px;padding-bottom:12px}
+  .rolo{margin:0 -14px;padding:0 14px;-webkit-overflow-scrolling:touch}
+  .rolo table td:first-child,.rolo table th:first-child{position:sticky;left:-14px;background:var(--cartao);z-index:1;box-shadow:1px 0 0 var(--linha-fina)}
+  .rolo table tr.tot td:first-child,.orc tr.tot td:first-child{background:var(--erva)}
+  .orc td:first-child{min-width:132px;max-width:150px} .orc td:first-child .cod{display:none}
+  .orc input[type=text]{width:112px}
+  .mel p,.cartao>p{font-size:15px}
+  #pa-sair-fixo{display:none!important}
 }
+@media (prefers-reduced-motion:reduce){.dobra h2::after{transition:none!important}}
 </style>
 </head>
 <body>
@@ -163,12 +186,14 @@ code{font-family:ui-monospace,Menlo,monospace;background:var(--poco);padding:1px
 
 <div class="app">
 <nav aria-label="Menu principal">
-  <div class="marca"><b>We Garden</b><span>Painel da Administração</span></div>
+  <div class="marca"><b>We Garden</b><span>Painel da Administração</span><span id="mtit"></span></div>
+  <button type="button" id="mbtn" aria-expanded="false" aria-controls="menu">Menu</button>
   <div class="menu" id="menu"></div>
   <div class="rodape">
     <div>Última atualização<br><b id="ult">a carregar…</b></div>
     <div id="prox">Atualiza todos os dias de manhã.</div>
     <a href="#calculo" style="color:var(--noite-txt)">Como é calculado</a>
+    <a href="#" id="msair" hidden style="color:var(--noite-txt)">Sair</a>
   </div>
 </nav>
 <main id="main"><div class="vazio">A carregar os dados…</div></main>
@@ -182,7 +207,7 @@ var SP_RESUMO='https://wegarden.sharepoint.com/sites/Administrativo/Documentos%2
 var ECRAS=[['geral','Vista geral'],['tesouraria','Tesouraria'],['obras','Obras'],['pessoas','Pessoas e equipas'],['ferias','Férias'],['comercial','Comercial'],['manutencao','Manutenção'],['contabilidade','Contabilidade'],['salarios','Salários'],['objetivos','Objetivos'],['orcamento','Orçamento 2027'],['melhoria','Melhorar a empresa']];
 var MESES=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
 var TIPOS={materiais:'Materiais e subempreitadas',pessoal:'Pessoal',transportes:'Transportes',estrutura:'Custos de estrutura',irc:'IRC'};
-var E={mel:{},melMsg:'',melLv:'',melEst:'',orc:{},orcMsg:'',plan:{},mVista:'rent',manObra:{},cli:[],sal:{},cont:{},objs:{},dl:null,man:{},mAno:null,mEq:'',mLim:30,com:{},pipe:null,cAno:null,cq:'',cProg:'',cResp:'',cGrau:'',cLim:40,fed:[],fsel:null,fform:{},fmsg:'',fmsgErro:false,fLista:[],eqAbrir:false,eqr:{},eqmsg:'',apagar:null,apagarEq:null,pessoas:[],equipas:[],ferias:[],pv:'org',psel:null,rasc:null,pmsg:'',fMes:null,fTodos:false,fEq:'',nomes:{},uid:null,dias:[],obras:[],estados:{},obj:{},log:[],pronto:false,erro:null,podeEditar:false,periodo:90,fEstado:'Todas',fAno:'',sel:null};
+var E={dobras:{},kpis:{},mel:{},melMsg:'',melLv:'',melEst:'',orc:{},orcMsg:'',plan:{},mVista:'rent',manObra:{},cli:[],sal:{},cont:{},objs:{},dl:null,man:{},mAno:null,mEq:'',mLim:30,com:{},pipe:null,cAno:null,cq:'',cProg:'',cResp:'',cGrau:'',cLim:40,fed:[],fsel:null,fform:{},fmsg:'',fmsgErro:false,fLista:[],eqAbrir:false,eqr:{},eqmsg:'',apagar:null,apagarEq:null,pessoas:[],equipas:[],ferias:[],pv:'org',psel:null,rasc:null,pmsg:'',fMes:null,fTodos:false,fEq:'',nomes:{},uid:null,dias:[],obras:[],estados:{},obj:{},log:[],pronto:false,erro:null,podeEditar:false,periodo:90,fEstado:'Todas',fAno:'',sel:null};
 var db=null,prov=[];
 
 /* ---------- formatação ---------- */
@@ -1224,7 +1249,42 @@ function render(forcar){
   m.innerHTML=r==='tesouraria'?tesouraria():r==='obras'?obras():r==='pessoas'?pessoasEcra():r==='ferias'?feriasEcra():r==='comercial'?comercialEcra():r==='manutencao'?manutencaoEcra():r==='contabilidade'?contabilidadeEcra():r==='salarios'?salariosEcra():r==='objetivos'?objetivosEcra():r==='orcamento'?orcamentoEcra():r==='melhoria'?melhoriaEcra():r==='calculo'?calculo():vistaGeral();
   var l=E.log[0],ul=l&&l.quando||(ultimo()&&ultimo().lido_em);
   document.getElementById('ult').textContent=ul?hora(ul).replace(' às ',' · '):'sem dados';
+  var et=ECRAS.filter(function(e){return e[0]===r})[0];document.getElementById('mtit').textContent=et?et[1]:r==='calculo'?'Como é calculado':'';
+  movel(r);
 }
+var MOVEL=window.matchMedia?window.matchMedia('(max-width:760px)'):{matches:false};
+function chaveDobra(r,c,h){return r+'|'+(c.getAttribute('aria-label')||h.textContent)}
+function movel(r){
+  // só no telemóvel: cartões com título passam a dobrar; indicadores além dos quatro primeiros ficam atrás de um botão
+  if(!MOVEL.matches)return;
+  var m=document.getElementById('main'),primeiro=true;
+  [].forEach.call(m.querySelectorAll('section.cartao'),function(c){
+    var h=null,k;for(k=0;k<c.children.length&&!h;k++){var f=c.children[k];if(f.tagName==='H2')h=f;else if(f.classList.contains('cab')&&f.querySelector('h2'))h=f}
+    if(!h||c.closest('section.cartao section.cartao'))return;
+    var t=h.tagName==='H2'&&h.previousElementSibling&&h.previousElementSibling.classList.contains('sobre')?null:h;
+    if(!t){t=h}
+    t.classList.add('dobra-t');c.classList.add('dobra');
+    if(h.previousElementSibling&&h.tagName==='H2')h.previousElementSibling.classList.add('dobra-t');
+    var ch=chaveDobra(r,c,h.tagName==='H2'?h:h.querySelector('h2')),est=E.dobras[ch];
+    if(est==null)est=primeiro||(!c.classList.contains('mel')&&!!c.querySelector('input:not([disabled]),select:not([disabled]),textarea:not([disabled])'));
+    primeiro=false;c.dataset.dobra=ch;
+    if(!est)c.classList.add('fechada');
+    var hh=h.tagName==='H2'?h:h.querySelector('h2');hh.setAttribute('role','button');hh.setAttribute('tabindex','0');hh.setAttribute('aria-expanded',String(!!est));
+  });
+  var g=m.querySelector(':scope > section.grelha');
+  if(g&&g.children.length>4&&!E.kpis[r]){g.classList.add('curta');var b=document.createElement('button');b.type='button';b.className='mais';b.dataset.kpis=r;b.textContent='Mostrar os '+g.children.length+' indicadores';g.parentNode.insertBefore(b,g.nextSibling)}
+}
+function alternarDobra(c){var f=c.classList.toggle('fechada');E.dobras[c.dataset.dobra]=!f;var h=c.querySelector('h2');if(h)h.setAttribute('aria-expanded',String(!f))}
+(function(){
+  var nav=document.querySelector('nav'),bt=document.getElementById('mbtn');
+  function fecha(){nav.classList.remove('aberto');bt.setAttribute('aria-expanded','false');bt.textContent='Menu';document.body.style.overflow=''}
+  bt.addEventListener('click',function(){if(nav.classList.contains('aberto')){fecha();return}nav.classList.add('aberto');bt.setAttribute('aria-expanded','true');bt.textContent='Fechar';document.body.style.overflow='hidden';
+    var sf=document.getElementById('pa-sair-fixo'),ms=document.getElementById('msair');if(sf&&ms)ms.hidden=false});
+  nav.addEventListener('click',function(e){var a=e.target.closest('a');if(!a)return;if(a.id==='msair'){e.preventDefault();var sf=document.getElementById('pa-sair-fixo');if(sf)sf.click();return}fecha()});
+  window.addEventListener('hashchange',function(){fecha();if(MOVEL.matches)window.scrollTo(0,0)});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')fecha();if((e.key==='Enter'||e.key===' ')&&e.target.matches&&e.target.matches('.dobra h2[role=button]')){e.preventDefault();alternarDobra(e.target.closest('.dobra'))}});
+  if(MOVEL.addEventListener)MOVEL.addEventListener('change',function(){fecha();render(true)});
+})();
 document.getElementById('main').addEventListener('input',function(e){var d=e.target.dataset||{};if(e.target.id==='c-pesq'){E.cq=e.target.value;E.cLim=40;render(true);var ci=document.getElementById('c-pesq');if(ci){ci.focus();try{ci.setSelectionRange(E.cq.length,E.cq.length)}catch(x){}}return}if(d.f&&E.rasc)E.rasc[d.f]=e.target.value;if(d.ff&&e.target.type!=='checkbox')E.fform[d.ff]=e.target.value;if(d.ef){E.eqr[d.eq]=Object.assign({},equipa(d.eq)||{cor:'#91B03E',ramo:'manutencao'},E.eqr[d.eq]||{});E.eqr[d.eq][d.ef]=e.target.value}});
 document.getElementById('main').addEventListener('dragstart',function(e){var b=e.target.closest&&e.target.closest('[data-pes]');if(b&&E.podeEditar){e.dataTransfer.setData('text/plain',b.dataset.pes);e.dataTransfer.effectAllowed='move'}});
 document.getElementById('main').addEventListener('dragover',function(e){var z=e.target.closest&&e.target.closest('[data-drop]');if(z&&E.podeEditar){e.preventDefault();z.classList.add('alvo')}});
@@ -1233,6 +1293,8 @@ document.getElementById('main').addEventListener('drop',function(e){var z=e.targ
 window.addEventListener('hashchange',function(){document.getElementById('origem').hidden=true;render(true);window.scrollTo(0,0)});
 document.getElementById('main').addEventListener('focusout',function(){if(adiado)setTimeout(function(){render()},0)});
 document.getElementById('main').addEventListener('click',function(e){
+  var kb=e.target.closest('[data-kpis]');if(kb){E.kpis[kb.dataset.kpis]=true;render(true);return}
+  var dt=e.target.closest('.dobra-t');if(dt&&MOVEL.matches&&!e.target.closest('button,a,input,select,textarea,.v')){var dc=dt.closest('.dobra');if(dc&&dc.dataset.dobra){alternarDobra(dc);return}}
   var b=e.target.closest('[data-per]');if(b){E.periodo=+b.dataset.per;render(true);return}
   b=e.target.closest('[data-est]');if(b){E.fEstado=b.dataset.est;render(true);return}
   if(e.target.closest('.v'))return;
