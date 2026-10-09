@@ -141,6 +141,9 @@ code{font-family:ui-monospace,Menlo,monospace;background:var(--poco);padding:1px
 .nomef{background:none;border:0;padding:0;text-align:left;font:inherit;font-weight:600;font-size:14px;color:inherit;cursor:pointer;text-decoration:underline dotted var(--borda-ctl);text-underline-offset:3px}
 .nomef.on{color:var(--verde-txt)} .cel[data-fn]{cursor:pointer} .cel[data-fn]:hover{outline:2px solid var(--verde-esc)}
 .cel.baixa,.lg.baixa{background:var(--aviso-linha)}
+.aj{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;border:1px solid var(--borda-ctl);background:var(--cartao);color:var(--verde-txt);font:600 12px/1 var(--fb);cursor:pointer;padding:0;vertical-align:middle;text-transform:none;letter-spacing:0}
+.aj:hover,.aj:focus-visible{border-color:var(--verde-esc);background:var(--erva)}
+.intro{margin:-6px 0 0;max-width:78ch;color:var(--mute);line-height:1.5}
 #mbtn,#mtit{display:none}
 @media (max-width:760px){
   /* telemóvel: barra de topo de uma linha com botão de menu; o menu abre em ecrã inteiro.
@@ -178,6 +181,7 @@ code{font-family:ui-monospace,Menlo,monospace;background:var(--poco);padding:1px
   .orc td:first-child{min-width:132px;max-width:150px} .orc td:first-child .cod{display:none}
   .orc input[type=text]{width:112px}
   .mel p,.cartao>p{font-size:15px}
+  .aj{width:26px;height:26px;font-size:14px} .intro{font-size:15px;margin-top:-2px}
   #pa-sair-fixo{display:none!important}
 }
 @media (prefers-reduced-motion:reduce){.dobra h2::after{transition:none!important}}
@@ -245,6 +249,7 @@ function mostraOrigem(btn){
   o.style.left=x+'px';o.style.top=y+'px';
 }
 document.addEventListener('click',function(e){
+  var aj=e.target.closest&&e.target.closest('.aj');if(aj){e.stopPropagation();e.preventDefault();mostraAjuda(aj);return}
   var b=e.target.closest&&e.target.closest('.v');
   if(b){e.stopPropagation();mostraOrigem(b);return}
   if(!e.target.closest('#origem'))document.getElementById('origem').hidden=true;
@@ -425,7 +430,7 @@ function obras(){
 }
 
 function calculo(){
-  return cabecalho('Definições dos indicadores','Como é calculado')+'<section class="cartao"><dl>'+
+  return cabecalho('Definições dos indicadores','Como é calculado')+'<section class="cartao" aria-label="Dicionário"><h2>Dicionário em linguagem simples</h2><div class="sobre" style="margin-bottom:8px">Os termos de gestão que aparecem no painel. Em cada ecrã, o “?” ao lado de um termo abre a mesma explicação.</div><dl>'+GLOSS.slice().sort(function(a,b){return a[1].localeCompare(b[1],'pt')}).map(function(g){return '<dt>'+esc(g[1])+'</dt><dd>'+esc(g[2])+'</dd>'}).join('')+'</dl></section><section class="cartao"><h2>Como cada número é calculado</h2><dl>'+
   '<dt>Saldo bancário total</dt><dd>Soma de todas as linhas do bloco “Saldos Bancários” da última folha do resumo financeiro, incluindo os depósitos a prazo.</dd>'+
   '<dt>Saldo final</dt><dd>Valor “Saldo Final” da última folha. É verificado contra o cálculo: bancos + a receber − todas as linhas de “Valor a Pagar”. Se divergir, aparece um aviso.</dd>'+
   '<dt>A pagar</dt><dd>Soma das linhas de “Valor a Pagar” da última folha. Cada linha é classificada pelo rótulo: fornecedores, impostos, salários, seguros ou outros.</dd>'+
@@ -1354,7 +1359,74 @@ function render(forcar){
   var l=E.log[0],ul=l&&l.quando||(ultimo()&&ultimo().lido_em);
   document.getElementById('ult').textContent=ul?hora(ul).replace(' às ',' · '):'sem dados';
   var et=ECRAS.filter(function(e){return e[0]===r})[0];document.getElementById('mtit').textContent=et?et[1]:r==='calculo'?'Como é calculado':'';
+  simples(r);
   movel(r);
+}
+/* ---------- linguagem simples: explicação dos termos de gestão ---------- */
+// A administração não é de finanças: cada termo técnico leva um "?" que abre uma explicação curta.
+var GLOSS=[
+  [/margem ebitda/i,'Margem EBITDA','De cada 100 € faturados, quantos ficam como lucro da atividade.'],
+  [/ebitda/i,'EBITDA','É o lucro da atividade: o que sobra da faturação depois de pagar materiais, subcontratos, pessoal e despesas correntes. Não conta o desgaste dos equipamentos, os juros dos empréstimos nem o imposto sobre o lucro.'],
+  [/margem bruta/i,'Margem bruta','De cada 100 € faturados, o que sobra depois de pagar os materiais e os subcontratos. É com isto que se pagam o pessoal, a estrutura e o lucro.'],
+  [/volume de neg[óo]cios/i,'Volume de negócios','Tudo o que a empresa faturou no período, sem IVA.'],
+  [/receita real/i,'Receita real','A faturação depois de tirar materiais e subcontratos, que só passam pela empresa. É o dinheiro que fica para pagar pessoal, estrutura e lucro.'],
+  [/resultado antes de impostos/i,'Resultado antes de impostos','O lucro depois de todos os custos, incluindo o desgaste dos equipamentos e os juros, mas antes do imposto sobre o lucro.'],
+  [/resultado l[íi]quido/i,'Resultado líquido','O lucro final do ano, depois de pagos todos os custos e o imposto.'],
+  [/deprecia/i,'Depreciações','O desgaste dos equipamentos e viaturas: o preço de compra repartido pelos anos em que são usados. É um custo que não sai da conta bancária nesse mês.'],
+  [/fornecimentos e servi[çc]os|servi[çc]os externos/i,'Fornecimentos e serviços','As despesas correntes com terceiros: subcontratos, combustíveis, seguros, rendas, reparações, comunicações.'],
+  [/gastos com (o )?pessoal/i,'Gastos com o pessoal','Salários, subsídios, Segurança Social paga pela empresa e seguros de acidentes de trabalho.'],
+  [/encargos/i,'Encargos','O que a empresa paga além do salário: sobretudo a Segurança Social (cerca de 23,75 % do salário) e o seguro de acidentes de trabalho.'],
+  [/remunera[çc][õo]es brutas/i,'Remunerações brutas','O total dos salários antes dos descontos do trabalhador (IRS e Segurança Social).'],
+  [/l[íi]quido pago/i,'Líquido pago','O que os trabalhadores recebem na conta, depois dos descontos.'],
+  [/saldo final|liquidez/i,'Saldo final (liquidez)','O dinheiro com que a empresa pode contar: o que está nos bancos, mais o que os clientes devem, menos o que há a pagar a fornecedores e ao Estado.'],
+  [/saldo banc[áa]rio/i,'Saldo bancário','O dinheiro que está hoje nas contas bancárias, incluindo os depósitos a prazo.'],
+  [/prazo m[ée]dio de recebimento/i,'Prazo médio de recebimento','Quantos dias, em média, um cliente demora a pagar uma fatura.'],
+  [/prazo m[ée]dio de pagamento/i,'Prazo médio de pagamento','Quantos dias, em média, a empresa demora a pagar aos fornecedores.'],
+  [/d[íi]vida l[íi]quida/i,'Dívida líquida','O que a empresa deve aos bancos menos o dinheiro que tem. Se for negativa, tem mais dinheiro do que dívida.'],
+  [/capital pr[óo]prio/i,'Capital próprio','O que pertence aos sócios: o dinheiro que puseram na empresa mais os lucros que lá foram ficando.'],
+  [/passivo/i,'Passivo','Tudo o que a empresa deve: a fornecedores, bancos, sócios, pessoal e Estado.'],
+  [/balan[çc]o/i,'Balanço','Uma fotografia do que a empresa tem e do que deve num certo dia.'],
+  [/balancete/i,'Balancete','A lista mensal da contabilidade com o saldo de todas as contas. É de onde saem os números deste ecrã.'],
+  [/invent[áa]rio/i,'Inventário','O material que está em armazém, pelo preço de compra.'],
+  [/gastos fixos/i,'Gastos fixos','As despesas que existem todos os meses mesmo que não se fature nada: salários, rendas, seguros, comunicações.'],
+  [/taxa de adjudica/i,'Taxa de adjudicação','De cada 100 propostas com resposta, quantas foram ganhas. Em valor, conta os euros em vez do número de propostas.'],
+  [/pipeline/i,'Pipeline','A lista dos pedidos de orçamento que ainda estão em aberto.'],
+  [/aven[çc]a/i,'Avença','Um contrato de manutenção com um valor fixo por mês.'],
+  [/margem/i,'Margem','De cada 100 € cobrados ao cliente, quantos sobram depois de pagos os custos desse trabalho. Uma margem de 30 % quer dizer que sobram 30 €.'],
+  [/execu[çc][ãa]o/i,'Execução','A diferença entre o que aconteceu e o que estava previsto no objetivo ou no orçamento.'],
+  [/subcontrat/i,'Subcontratos','Trabalho feito por outras empresas por conta da We Garden.']
+];
+var INTRO={
+  tesouraria:'Este ecrã responde a uma pergunta: quanto dinheiro tem a empresa hoje, e como evoluiu. Junta o que está nos bancos, o que os clientes devem e o que há a pagar.',
+  contabilidade:'Aqui estão as contas do ano mês a mês: quanto se faturou, onde se gastou e quanto sobrou. Vêm dos balancetes que a contabilidade prepara todos os meses. Atenção: os números só ficam definitivos depois do fecho do ano, que costuma baixar o lucro.',
+  salarios:'Quanto custa o pessoal à empresa, mês a mês. Mostra só totais; não mostra o salário de ninguém.',
+  objetivos:'Compara o que aconteceu com o que estava previsto para o ano, mês a mês.',
+  orcamento:'O orçamento é o plano de contas do próximo ano: quanto se espera faturar, quanto se pode gastar e quanto deve sobrar. Preencha a coluna “Orçamento”; as sugestões ao lado são um ponto de partida.',
+  manutencao:'Mostra se cada contrato de manutenção dá lucro: o que o cliente paga por mês contra o custo das horas lá gastas.',
+  comercial:'As propostas feitas aos clientes este ano: quantas foram enviadas, ganhas e perdidas, e os pedidos que ainda esperam resposta.',
+  obras:'Cada obra com o que foi orçamentado, o que já custou e o lucro até agora.',
+  ponto:'O registo de entradas e saídas no PicaPonto: quem pica, quem se esquece de picar a saída e quantas horas as pessoas estão presentes.'
+};
+function glossTermo(t){for(var i=0;i<GLOSS.length;i++)if(GLOSS[i][0].test(t))return i;return -1}
+function simples(r){
+  // corre depois de cada desenho: junta um "?" aos termos de gestão e uma frase de abertura ao ecrã
+  var m=document.getElementById('main'),top=m.querySelector('header.topo');
+  if(INTRO[r]&&top&&!m.querySelector('.intro')){var d=document.createElement('p');d.className='intro';d.textContent=INTRO[r];top.parentNode.insertBefore(d,top.nextSibling)}
+  if(r==='pme'||r==='calculo')return;
+  var usados={};
+  [].forEach.call(m.querySelectorAll('.kpi>.sobre:first-child, h2, th, .poco small, td:first-child>b'),function(e){
+    if(e.querySelector('.aj'))return;var i=glossTermo(e.textContent);if(i<0)return;
+    usados[i]=(usados[i]||0)+1;if(usados[i]>(e.tagName==='TH'||e.tagName==='B'?1:3))return;
+    var b=document.createElement('button');b.type='button';b.className='aj';b.dataset.aj=i;b.textContent='?';b.setAttribute('aria-label','O que é: '+GLOSS[i][1]);
+    e.appendChild(document.createTextNode(' '));e.appendChild(b);
+  });
+}
+function mostraAjuda(btn){
+  var g=GLOSS[+btn.dataset.aj],o=document.getElementById('origem');if(!g)return;
+  o.innerHTML='<div class="et">Em linguagem simples</div><div class="ti">'+esc(g[1])+'</div><div class="de">'+esc(g[2])+'</div>';
+  o.hidden=false;
+  var r=btn.getBoundingClientRect(),w=o.offsetWidth,h=o.offsetHeight,x=Math.min(Math.max(16,r.left-20),window.innerWidth-w-16),y=r.bottom+8;if(y+h>window.innerHeight-8)y=Math.max(8,r.top-h-8);
+  o.style.left=x+'px';o.style.top=y+'px';
 }
 var MOVEL=window.matchMedia?window.matchMedia('(max-width:760px)'):{matches:false};
 function chaveDobra(r,c,h){return r+'|'+(c.getAttribute('aria-label')||h.textContent)}
@@ -1397,8 +1469,9 @@ document.getElementById('main').addEventListener('drop',function(e){var z=e.targ
 window.addEventListener('hashchange',function(){document.getElementById('origem').hidden=true;render(true);window.scrollTo(0,0)});
 document.getElementById('main').addEventListener('focusout',function(){if(adiado)setTimeout(function(){render()},0)});
 document.getElementById('main').addEventListener('click',function(e){
+  if(e.target.closest('.aj'))return;
   var kb=e.target.closest('[data-kpis]');if(kb){E.kpis[kb.dataset.kpis]=true;render(true);return}
-  var dt=e.target.closest('.dobra-t');if(dt&&MOVEL.matches&&!e.target.closest('button,a,input,select,textarea,.v')){var dc=dt.closest('.dobra');if(dc&&dc.dataset.dobra){alternarDobra(dc);return}}
+  var dt=e.target.closest('.dobra-t');if(dt&&MOVEL.matches&&!e.target.closest('button,a,input,select,textarea,.v,.aj')){var dc=dt.closest('.dobra');if(dc&&dc.dataset.dobra){alternarDobra(dc);return}}
   var b=e.target.closest('[data-per]');if(b){E.periodo=+b.dataset.per;render(true);return}
   b=e.target.closest('[data-est]');if(b){E.fEstado=b.dataset.est;render(true);return}
   if(e.target.closest('.v'))return;
