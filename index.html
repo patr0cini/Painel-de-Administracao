@@ -794,7 +794,7 @@ function serieMensal(d,ch){
   // objetivo e ano anterior vêm do ficheiro de objetivos; o realizado vem dos balancetes quando existem
   var v=d&&d[ch||'volume'];if(!v||!v.length)return null;
   var c=E.cont[d.ano],k=(ch||'volume')==='volume'?'vn':'ebitda',pm={};if(c)c.meses.forEach(function(m){pm[m.mes]=m});
-  var ea=k==='ebitda'&&E.ewp[d.ano]&&E.ewp[d.ano].ebitda_anterior;
+  var ea=E.ewp[d.ano]&&E.ewp[d.ano][k==='ebitda'?'ebitda_anterior':'vn_anterior'];
   return v.map(function(x,i){var m=pm[i+1],y=ea&&ea[i]!=null?Object.assign({},x,{anterior:ea[i]}):x;return m?Object.assign({},y,{atual:m[k],contab:true}):y});
 }
 function volResumo(d,ch){
