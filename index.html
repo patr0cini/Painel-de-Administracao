@@ -49,6 +49,15 @@ nav{flex:1 1 220px;max-width:280px;min-width:0;background:var(--noite);color:var
 .menu a[aria-current="page"]{background:var(--verde);color:#16210F;font-weight:600}
 .menu a.off{color:var(--noite-off);cursor:default}
 .menu a.off span{font-size:12px}
+.menu .grupo{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:44px;padding:0 12px;border:0;border-radius:8px;background:transparent;color:var(--noite-txt);font:inherit;text-align:left;cursor:pointer}
+.menu .grupo:hover{background:rgba(255,255,255,.07)}
+.menu .grupo.tem{font-weight:600}
+.menu .grupo i{flex:0 0 auto;width:8px;height:8px;border-right:2px solid var(--noite-mute);border-bottom:2px solid var(--noite-mute);transform:rotate(45deg);margin-top:-4px;transition:transform .15s}
+.menu .grupo[aria-expanded="true"] i{transform:rotate(-135deg);margin-top:4px}
+.menu .sub{display:flex;flex-direction:column;gap:2px;margin:0 0 6px 18px;padding-left:8px;border-left:1px solid var(--noite-off)}
+.menu .sub[hidden]{display:none}
+[hidden]{display:none!important}/* sem isto, regras como #origem{display:flex} mantêm visível o que o código esconde */
+.menu .sub a{min-height:40px}
 .rodape{margin-top:auto;padding:0 12px;font-size:13px;color:var(--noite-mute);display:flex;flex-direction:column;gap:10px}
 .rodape b{color:#fff;font-weight:600}
 .rodape button{min-height:44px;border-radius:8px;border:1px solid var(--verde);background:transparent;color:var(--noite-txt);font-size:14px;cursor:pointer}
@@ -106,7 +115,9 @@ svg text{font-family:var(--fb);fill:var(--mute)}
 .tipo small{font-size:12px;color:var(--mute)}
 .nota{font-size:14px;border-top:1px solid var(--linha-fina);padding-top:8px}
 #origem{position:fixed;z-index:20;max-width:min(340px,calc(100vw - 32px));background:var(--cartao);border:1px solid var(--verde-esc);border-radius:12px;padding:16px 18px;box-shadow:0 8px 24px rgba(0,0,0,.18);display:flex;flex-direction:column;gap:6px}
-#origem .et{font-size:12px;font-weight:600;color:var(--verde-txt);text-transform:uppercase;letter-spacing:.6px}
+#origem .fecha{position:absolute;top:6px;right:6px;width:36px;height:36px;border:0;border-radius:8px;background:transparent;color:var(--mute);font:400 24px/1 var(--fb);cursor:pointer}
+#origem .fecha:hover,#origem .fecha:focus-visible{background:var(--erva);color:var(--txt)}
+#origem .et{padding-right:30px;font-size:12px;font-weight:600;color:var(--verde-txt);text-transform:uppercase;letter-spacing:.6px}
 #origem .ti{font-family:var(--ft);font-size:18px}
 #origem .de{font-size:14px;color:var(--mute);line-height:1.5}
 dl{margin:0;display:grid;grid-template-columns:minmax(140px,1fr) 3fr;gap:10px 20px;font-size:14px}
@@ -131,6 +142,7 @@ dt{font-weight:600} dd{margin:0;color:var(--mute)}
 .cel.ferias,.lg.ferias{background:var(--verde)} .cel.estatuto,.lg.estatuto{background:var(--info)} .cel.lsv,.lg.lsv{background:var(--mute)}
 .cel.conf,.lg.conf{background:var(--cartao);border:2px dashed var(--aviso-linha)}
 .cel.meio{background:linear-gradient(90deg,var(--verde) 50%,var(--cel) 50%)}
+td i.lg{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:8px;vertical-align:-1px}
 .legenda i.lg{width:14px;height:14px;border-radius:3px;vertical-align:-2px} .lg.fds{background:var(--linha-fina)} .lg.hoje{background:var(--noite)}
 code{font-family:ui-monospace,Menlo,monospace;background:var(--poco);padding:1px 6px;border-radius:4px}
 .mini{min-height:32px!important;padding:0 10px!important;font-size:13px}
@@ -155,7 +167,7 @@ code{font-family:ui-monospace,Menlo,monospace;background:var(--poco);padding:1px
   .menu,.rodape{display:none}
   nav.aberto{position:fixed;inset:0;align-content:flex-start;overflow-y:auto;padding-bottom:32px}
   nav.aberto .menu{display:flex;flex-direction:column;flex-basis:100%;gap:2px;margin-top:12px}
-  nav.aberto .menu a{min-height:48px;font-size:17px}
+  nav.aberto .menu a,nav.aberto .menu .grupo{min-height:48px;font-size:17px}
   nav.aberto .rodape{display:flex;flex-basis:100%;margin-top:18px;padding:14px 12px 0;border-top:1px solid var(--noite-off);font-size:13px;gap:8px}
   #prox{display:none}
   main{padding:16px 14px 72px;gap:14px} h1{font-size:24px} h2{font-size:17px}
@@ -184,7 +196,7 @@ code{font-family:ui-monospace,Menlo,monospace;background:var(--poco);padding:1px
   .aj{width:26px;height:26px;font-size:14px} .intro{font-size:15px;margin-top:-2px}
   #pa-sair-fixo{display:none!important}
 }
-@media (prefers-reduced-motion:reduce){.dobra h2::after{transition:none!important}}
+@media (prefers-reduced-motion:reduce){.dobra h2::after,.menu .grupo i{transition:none!important}}
 </style>
 </head>
 <body>
@@ -210,7 +222,9 @@ code{font-family:ui-monospace,Menlo,monospace;background:var(--poco);padding:1px
 (function(){
 'use strict';
 var SP_RESUMO='https://wegarden.sharepoint.com/sites/Administrativo/Documentos%20Partilhados/Diversos/Resumo%20Financeiro%20di%C3%A1rio.xlsx';
-var ECRAS=[['geral','Vista geral'],['tesouraria','Tesouraria'],['obras','Obras'],['pessoas','Pessoas e equipas'],['ferias','Férias'],['ponto','Ponto'],['comercial','Comercial'],['manutencao','Manutenção'],['contabilidade','Contabilidade'],['salarios','Salários'],['objetivos','Objetivos'],['orcamento','Orçamento 2027'],['pme','PME Líder'],['melhoria','Melhorar a empresa']];
+var ECRAS=[['geral','Vista geral'],['tesouraria','Tesouraria'],['faturacao','Faturação'],['obras','Obras'],['pessoas','Pessoas e equipas'],['ferias','Férias'],['ponto','Ponto'],['comercial','Comercial'],['manutencao','Manutenção'],['contabilidade','Contabilidade'],['salarios','Salários'],['objetivos','Objetivos'],['orcamento','Orçamento 2027'],['pme','PME Líder'],['melhoria','Melhorar a empresa']];
+// Menu lateral: ecrãs agrupados por tipo; cada grupo abre como uma lista dentro do menu.
+var GRUPOS=[['financas','Finanças',['tesouraria','faturacao','contabilidade','objetivos']],['producao','Produção / Comercial',['obras','comercial','manutencao']],['rh','Recursos Humanos',['pessoas','ferias','ponto','salarios']],['gestao','Gestão',['orcamento','pme','melhoria']]];
 var MESES=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
 var TIPOS={materiais:'Materiais e subempreitadas',pessoal:'Pessoal',transportes:'Transportes',estrutura:'Custos de estrutura',irc:'IRC'};
 var E={pme:null,ewp:{},ponto:{},dobras:{},kpis:{},mel:{},melMsg:'',melLv:'',melEst:'',orc:{},orcMsg:'',plan:{},mVista:'rent',manObra:{},cli:[],sal:{},cont:{},objs:{},dl:null,man:{},mAno:null,mEq:'',mLim:30,com:{},pipe:null,cAno:null,cq:'',cProg:'',cResp:'',cGrau:'',cLim:40,fed:[],fsel:null,fform:{},fmsg:'',fmsgErro:false,fLista:[],eqAbrir:false,eqr:{},eqmsg:'',apagar:null,apagarEq:null,pessoas:[],equipas:[],ferias:[],pv:'org',psel:null,rasc:null,pmsg:'',fMes:null,fTodos:false,fEq:'',nomes:{},uid:null,dias:[],obras:[],estados:{},obj:{},log:[],pronto:false,erro:null,podeEditar:false,periodo:90,fEstado:'Todas',fAno:'',sel:null};
@@ -237,24 +251,34 @@ function pDia(d,tit,cel,linha){return{tit:tit,fich:d.ficheiro||'Resumo Financeir
 function pCalc(tit,como,d){return{tit:tit,calc:como,fich:d&&'Resumo Financeiro diário.xlsx',folha:d&&d.folha,lido:d&&d.lido_em,url:d&&SP_RESUMO}}
 function mostraOrigem(btn){
   var p=prov[+btn.dataset.p],o=document.getElementById('origem');if(!p)return;
+  if(!o.hidden&&o._de===btn){fechaOrigem();return}// segundo toque no mesmo valor fecha
   var de=[];
   if(p.calc)de.push(esc(p.calc));
   if(p.fich)de.push(esc(p.fich));
   if(p.folha)de.push('Folha '+esc(p.folha)+(p.linha?' · linha “'+esc(p.linha)+'”':'')+(p.cel?' · célula '+esc(p.cel):''));
   if(p.lido)de.push('Lido em '+esc(hora(p.lido)));
-  o.innerHTML='<div class="et">Origem do valor</div><div class="ti">'+esc(p.tit)+'</div><div class="de">'+de.join('<br>')+'</div>'+(p.url?'<a href="'+esc(p.url)+'" target="_blank" rel="noopener">Abrir o ficheiro no SharePoint</a>':'');
-  o.hidden=false;
+  o.innerHTML=FECHA+'<div class="et">Origem do valor</div><div class="ti">'+esc(p.tit)+'</div><div class="de">'+de.join('<br>')+'</div>'+(p.url?'<a href="'+esc(p.url)+'" target="_blank" rel="noopener">Abrir o ficheiro no SharePoint</a>':'');
+  abreOrigem(o,btn);
   var r=btn.getBoundingClientRect(),w=o.offsetWidth,h=o.offsetHeight;
   var x=Math.min(Math.max(16,r.left),window.innerWidth-w-16),y=r.bottom+8;if(y+h>window.innerHeight-8)y=Math.max(8,r.top-h-8);
   o.style.left=x+'px';o.style.top=y+'px';
 }
+// Cartão de explicação/origem: fecha com ×, Escape, segundo toque no mesmo botão, toque fora ou scroll.
+// O toque fora usa pointerdown porque no iPhone tocar em zona vazia não gera "click".
+var FECHA='<button type="button" class="fecha" aria-label="Fechar">×</button>';
+function abreOrigem(o,btn){o._de=btn;o._y=window.scrollY;o.hidden=false}
+function fechaOrigem(){var o=document.getElementById('origem');if(o.hidden)return;o.hidden=true;o._de=null}
 document.addEventListener('click',function(e){
+  if(e.target.closest&&e.target.closest('#origem .fecha')){var de=document.getElementById('origem')._de;fechaOrigem();if(de&&de.focus)de.focus();return}
   var aj=e.target.closest&&e.target.closest('.aj');if(aj){e.stopPropagation();e.preventDefault();mostraAjuda(aj);return}
   var b=e.target.closest&&e.target.closest('.v');
   if(b){e.stopPropagation();mostraOrigem(b);return}
-  if(!e.target.closest('#origem'))document.getElementById('origem').hidden=true;
+  if(!e.target.closest('#origem'))fechaOrigem();
 });
-document.addEventListener('keydown',function(e){if(e.key==='Escape')document.getElementById('origem').hidden=true});
+document.addEventListener('pointerdown',function(e){if(!e.target.closest('#origem,.v,.aj'))fechaOrigem()},true);
+window.addEventListener('scroll',function(e){var o=document.getElementById('origem');if(o.hidden)return;if(e.target!==document&&e.target!==window){if(!o.contains(e.target))fechaOrigem();return}if(Math.abs(window.scrollY-o._y)>24)fechaOrigem()},true);
+window.addEventListener('resize',fechaOrigem);
+document.addEventListener('keydown',function(e){if(e.key==='Escape')fechaOrigem()});
 
 /* ---------- cálculos de tesouraria ---------- */
 function soma(l){return l.reduce(function(s,x){return s+(x.valor||0)},0)}
@@ -339,14 +363,15 @@ function vistaGeral(){
   var er=volResumo(objDoc(),'ebitda');
   if(vr&&vr.n)k+=kpi('Volume de negócios '+objDoc().ano,eur0(vr.atual),'Até '+vr.ultimo.toLowerCase()+' · '+(vr.exec>=0?'+':'−')+grp(Math.abs(vr.exec).toFixed(0))+'\u00a0€ face ao objetivo',vr.exec>=0?'ok':'warn',vr.objAno?vr.atual/vr.objAno*100:null);
   if(er&&er.n)k+=kpi('EBITDA '+objDoc().ano,eur0(er.atual),'Até '+er.ultimo.toLowerCase()+' · '+(er.exec>=0?'+':'−')+grp(Math.abs(er.exec).toFixed(0))+'\u00a0€ face ao objetivo',er.exec>=0?'ok':'warn');
+  var fu=fatUlt();if(fu&&fu.faturacao.ano.ate&&+fu.faturacao.ano.ate.slice(0,4)===hoje.getFullYear()){var ft=fatSemZC(fu.faturacao.ano);k+=kpi('Faturação '+hoje.getFullYear()+' sem Zcampo',v(eur0(ft),pCalc('Faturação sem Zcampo · '+eur(ft),'Resumo de Faturação s/IVA: total menos a série Zcampo',fu)),'até '+dm(fu.data)+' · <a href="#faturacao">ver por área</a>')}
   k+=kpi('Saldo bancário total',v(eur0(bt),pCalc('Saldo bancário total · '+eur(bt),'Soma das linhas de “Saldos Bancários”: '+u.bancos.map(function(b){return b.nome}).join(' + '),u)),ant?dif(bt-bancoTotal(ant))+' face a '+dm(ant.data):'sem comparação',ant?tom(bt-bancoTotal(ant),true):'');
   k+=kpi('Saldo final (liquidez)',v(eur0(sf),pDia(u,'Saldo final · '+eur(sf),u.saldo_final.celula,'Saldo Final')),min!=null?'Mínimo definido: '+eur0(min):'Mínimo por definir (ver Objetivos)',min!=null&&sf<min?'warn':'');
   k+=kpi('A receber de clientes',v(eur0(cli),pDia(u,'Clientes · '+eur(cli),u.receber[0]&&u.receber[0].celula,'Clientes')),ant?dif(cli-soma(ant.receber))+' face a '+dm(ant.data):'sem comparação',ant?tom(cli-soma(ant.receber),false):'');
   k+=kpi('A pagar',v(eur0(pag),pCalc('A pagar · '+eur(pag),'Soma das linhas de “Valor a Pagar”: '+u.pagar.map(function(b){return b.nome}).join(' + '),u)),'Fornecedores '+(forn==null?'sem dados':eur0(forn))+' · Impostos '+(imp==null?'sem dados':eur0(imp)));
   var rfo=realizado('faturacao_obra'),mfo=E.obj.faturacao_obra;
-  k+=kpi('Faturação obra '+hoje.getFullYear(),rfo.v==null?'<span class="mute">sem dados</span>':eur0(rfo.v),rfo.v==null?'Faturação por obra ainda não registada':(mfo?(rfo.v/mfo*100).toFixed(0)+'\u00a0% do objetivo de '+eur0(mfo):'objetivo por definir'),'',rfo.v!=null&&mfo?rfo.v/mfo*100:null);
+  k+=kpi('Faturação obra '+hoje.getFullYear(),rfo.v==null?'<span class="mute">sem dados</span>':eur0(rfo.v),rfo.v==null?'Faturação por obra ainda não registada':(fatSerieAno('OB',hoje.getFullYear())?'Série OB · ':'')+(mfo?(rfo.v/mfo*100).toFixed(0)+'\u00a0% do objetivo de '+eur0(mfo):'objetivo por definir'),'',rfo.v!=null&&mfo?rfo.v/mfo*100:null);
   var rfm=realizado('faturacao_manutencao'),mfm=E.obj.faturacao_manutencao;
-  k+=kpi('Faturação manutenção '+hoje.getFullYear(),rfm.v==null?'<span class="mute">sem dados</span>':eur0(rfm.v),rfm.v==null?'Avenças por carregar':'Estimativa pelas avenças · '+(mfm?(rfm.v/mfm*100).toFixed(0)+'\u00a0% do objetivo de '+eur0(mfm):'objetivo por definir'),'',rfm.v!=null&&mfm?rfm.v/mfm*100:null);
+  k+=kpi('Faturação manutenção '+hoje.getFullYear(),rfm.v==null?'<span class="mute">sem dados</span>':eur0(rfm.v),rfm.v==null?'Avenças por carregar':(rfm.est?'Estimativa pelas avenças · ':'Série JA · ')+(mfm?(rfm.v/mfm*100).toFixed(0)+'\u00a0% do objetivo de '+eur0(mfm):'objetivo por definir'),'',rfm.v!=null&&mfm?rfm.v/mfm*100:null);
   k+=kpi('Obras em curso',E.obras.length?String(curso.length):'<span class="mute">sem dados</span>',E.obras.length?(so?'Margem média '+pct(sl/so*100):'Margem sem dados')+(E.obj.margem_obra!=null?' · objetivo '+pct(E.obj.margem_obra):''):'Centros de custos por carregar');
   var fora=foraNaSemana(),nconf=fora.filter(function(f){return f.l.length&&f.l.every(function(x){return x.confirmar})}).length;
   k+=kpi('Fora esta semana',E.ferias.length?fora.length+(fora.length===1?' pessoa':' pessoas'):'<span class="mute">sem dados</span>',E.ferias.length?(nconf?nconf+' com data por confirmar':'segundo o mapa de férias'):'Mapa de férias por carregar');
@@ -400,6 +425,84 @@ function tesouraria(){
   return h+c+g+'<div class="linha2">'+t+n+'</div>';
 }
 
+/* ---------- faturação por série (tabelas "Resumo de Faturação s/IVA" do resumo financeiro) ---------- */
+// Séries (prefixo = ano): ZC é faturação feita em nome da Zcampo, entra e sai logo, por isso nunca conta nos totais.
+var FAT_S=[['OB','Obras (construção)','#2a78d6','#3987e5'],['JA','Manutenção (avenças)','#eb6834','#d95926'],['OI','Outras intervenções','#1baf7a','#199e70'],['AL','Alojamento Local · Pés n’Areia','#eda100','#c98500']];
+function fatSerie(n){return String(n).replace(/^\d{2}/,'').toUpperCase()}
+function fatMapa(b){var m={};(b&&b.linhas||[]).forEach(function(l){m[fatSerie(l[0])]={v:l[1],cel:l[2],nome:l[0]}});return m}
+function fatSemZC(b){var m=fatMapa(b),s=0;Object.keys(m).forEach(function(k){if(k!=='ZC')s+=m[k].v||0});return s}
+function fatUlt(){for(var i=E.dias.length-1;i>=0;i--){var f=E.dias[i].faturacao;if(f&&f.ano&&f.mes)return E.dias[i]}return null}
+function fatCor(k){var s=FAT_S.filter(function(x){return x[0]===k})[0],esc_=document.documentElement.dataset.theme==='dark'||(document.documentElement.dataset.theme!=='light'&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);return s?s[esc_?3:2]:'var(--borda-ctl)'}
+// Faturação de cada mês por série: acumulado no fim do mês (acumulado − mês corrente, lido numa folha do mês
+// seguinte) menos o do mês anterior. Usa a última folha de cada mês, que já tem as correções.
+function fatMeses(ano){
+  var fim={},ult=null;ano=String(ano);
+  E.dias.forEach(function(d){var f=d.faturacao;if(!f||!f.ano||!f.mes||!f.ano.ate||f.ano.ate.slice(0,4)!==ano||!f.mes.inicio||f.mes.inicio.slice(0,4)!==ano)return;
+    var mo=+f.mes.inicio.slice(5,7),a=fatMapa(f.ano),m=fatMapa(f.mes),acc={};Object.keys(a).forEach(function(k){acc[k]=a[k].v||0});
+    if(mo>1){var x={};Object.keys(a).forEach(function(k){x[k]=(a[k].v||0)-(m[k]&&m[k].v||0)});fim[ano+'-'+('0'+(mo-1)).slice(-2)]=x}
+    ult={k:f.mes.inicio.slice(0,7),v:acc,d:d.data}});
+  if(ult)fim[ult.k]=ult.v;
+  var ant={},antMes=0;
+  return Object.keys(fim).sort().map(function(k){var s={},t=0,mo=+k.slice(5,7);Object.keys(fim[k]).forEach(function(z){s[z]=Math.round((fim[k][z]-(ant[z]||0))*100)/100;if(z!=='ZC')t+=s[z]});
+    var nome=MESES[mo-1].slice(0,3);if(mo-antMes>1&&antMes>0)nome=MESES[antMes].slice(0,3)+'–'+nome;// meses sem folhas ficam juntos
+    var r={mes:k,nome:nome,s:s,tot:t,zc:s.ZC||0,corrente:ult&&k===ult.k,ate:ult&&k===ult.k?ult.d:null};ant=fim[k];antMes=mo;return r});
+}
+function fatBarras(L){
+  var W=1000,H=280,Lm=64,R=14,T=16,B=34,mx=Math.max.apply(null,L.map(function(m){return m.tot}).concat([1]));
+  var passo=Math.pow(10,Math.floor(Math.log10(mx)));if(mx/passo<3)passo/=2;if(mx/passo>7)passo*=2;
+  var top=Math.ceil(mx/passo)*passo,lw=(W-Lm-R)/L.length,bw=Math.min(56,lw*0.6);
+  function Y(n){return T+(top-n)/top*(H-T-B)}
+  var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Faturação por mês e por área, sem Zcampo" style="width:100%;height:auto">';
+  for(var g=0;g<=top+1e-6;g+=passo)s+='<line x1="'+Lm+'" x2="'+(W-R)+'" y1="'+Y(g)+'" y2="'+Y(g)+'" stroke="var(--'+(g===0?'borda-ctl':'linha-fina')+')"/><text x="'+(Lm-8)+'" y="'+(Y(g)+4)+'" text-anchor="end" font-size="12">'+grp((g/1000).toFixed(0))+' k</text>';
+  L.forEach(function(m,i){var x=Lm+i*lw+lw/2-bw/2,base=0,dica=m.nome+(m.corrente?' (até '+dm(m.ate)+')':'')+' · '+eur0(m.tot)+' sem Zcampo\n'+FAT_S.map(function(z){return z[1]+': '+eur0(m.s[z[0]]||0)}).join('\n');
+    s+='<g><title>'+esc(dica)+'</title><rect x="'+(x-4)+'" y="'+T+'" width="'+(bw+8)+'" height="'+(H-T-B)+'" fill="transparent"/>';
+    FAT_S.forEach(function(z){var val=Math.max(0,m.s[z[0]]||0);if(!val)return;var y1=Y(base+val),y0=Y(base),hh=y0-y1-2;if(hh>0.5)s+='<rect x="'+x+'" y="'+y1+'" width="'+bw+'" height="'+hh+'" rx="2" fill="'+fatCor(z[0])+'"'+(m.corrente?' opacity="0.55"':'')+'/>';base+=val});
+    s+='</g><text x="'+(x+bw/2)+'" y="'+(H-10)+'" text-anchor="middle" font-size="12">'+esc(m.nome)+'</text>'});
+  return s+'</svg>';
+}
+function faturacaoEcra(){
+  var u=fatUlt();
+  var h=cabecalho('Fonte: Resumo Financeiro diário.xlsx · tabelas “Resumo de Faturação s/IVA”'+(u?' · folha de '+dmy(u.data):''),'Faturação');
+  if(!u)return h+'<div class="cartao"><div class="vazio">As tabelas de faturação ainda não foram lidas do resumo financeiro.</div></div>';
+  var f=u.faturacao,A=fatMapa(f.ano),M=fatMapa(f.mes),F=fatMapa(f.fecho),P=fatMapa(f.anterior),ano=+(f.ano.ate||u.data).slice(0,4);
+  var nomeMes=MESES[+f.mes.inicio.slice(5,7)-1],tA=fatSemZC(f.ano),tM=fatSemZC(f.mes),zc=A.ZC&&A.ZC.v||0,cmp=f.fecho&&f.anterior&&f.anterior.ate&&+f.anterior.ate.slice(0,4)===ano-1;
+  var tF=cmp?fatSemZC(f.fecho):null,tP=cmp?fatSemZC(f.anterior):null;
+  function per(b){var p=(b.periodo||'').replace(/^Janeiro\s+\d{4}\s+a\s+/i,'');var d=ultimaData(p);return d?'jan–'+MESES[+d.slice(5,7)-1].slice(0,3):p}
+  function ultimaData(t){var m=String(t).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})\s*$/);return m?m[3]+'-'+('0'+m[2]).slice(-2)+'-'+('0'+m[1]).slice(-2):null}
+  function cel(mapa,k,tit){var x=mapa[k];return x?v(eur(x.v),pDia(u,tit+' · '+x.nome+' · '+eur(x.v),x.cel,x.nome)):'<span class="mute">—</span>'}
+  var c='<section class="grelha" aria-label="Faturação">';
+  c+=kpi('Faturação '+ano+' sem Zcampo',v(eur0(tA),pCalc('Faturação '+ano+' sem Zcampo · '+eur(tA),'Total da tabela “Resumo de Faturação s/IVA” ('+eur(f.ano.total&&f.ano.total.valor)+') menos a série Zcampo ('+eur(zc)+')',u)),esc(f.ano.periodo||'')+' · sem IVA');
+  c+=kpi('Faturado em '+nomeMes,v(eur0(tM),pCalc('Faturado em '+nomeMes+' · '+eur(tM),'Coluna do mês corrente da tabela, sem a série Zcampo',u)),'até '+dm(u.data)+' · sem Zcampo');
+  if(cmp){var d=tF-tP;c+=kpi('Face a '+(ano-1)+' ('+per(f.anterior)+')',(d>=0?'+':'−')+pct(Math.abs(tP?d/tP*100:0)),eur0(tF)+' contra '+eur0(tP)+' no mesmo período de '+(ano-1),tom(d,true))}
+  c+=kpi('Zcampo (não conta)',v(eur0(zc),pDia(u,'Zcampo · '+eur(zc),A.ZC&&A.ZC.cel,A.ZC&&A.ZC.nome)),'Faturado por nós em nome da Zcampo; o dinheiro entra e sai logo');
+  c+='</section>';
+  // quadro por área
+  var t='<section class="cartao" aria-label="Faturação por área"><h2>Por área</h2><div class="rolo"><table style="min-width:'+(cmp?760:520)+'px"><thead><tr><th>Área</th><th class="r">'+ano+' até '+dm(u.data)+'</th><th class="r">Peso</th><th class="r">'+nomeMes.charAt(0).toUpperCase()+nomeMes.slice(1)+'</th>'+(cmp?'<th class="r">'+ano+' '+per(f.anterior)+'</th><th class="r">'+(ano-1)+' '+per(f.anterior)+'</th><th class="r">Variação</th>':'')+'</tr></thead><tbody>';
+  var semAnt=[];
+  FAT_S.forEach(function(z){var k=z[0],a=A[k]&&A[k].v||0;var p=P[k]&&P[k].v,fx=F[k]&&F[k].v;if(cmp&&!p&&fx)semAnt.push(z[1]);
+    t+='<tr><td><i class="lg" style="background:'+fatCor(k)+'"></i>'+z[1]+' <span class="cod">'+k+'</span></td><td class="r">'+cel(A,k,'Acumulado')+'</td><td class="r">'+(tA?pct(a/tA*100):'—')+'</td><td class="r">'+cel(M,k,nomeMes)+'</td>'+
+      (cmp?'<td class="r">'+cel(F,k,'Acumulado até ao fim do mês anterior')+'</td><td class="r">'+(p?cel(P,k,String(ano-1)):'<span class="mute">não existia</span>')+'</td><td class="r '+(p?tom(fx-p,true):'mute')+'">'+(p?(fx-p>=0?'+':'−')+pct(Math.abs((fx-p)/p*100)):'—')+'</td>':'')+'</tr>'});
+  t+='<tr class="total"><td>Total We Garden (sem Zcampo)</td><td class="r">'+eur(tA)+'</td><td class="r">100%</td><td class="r">'+eur(tM)+'</td>'+(cmp?'<td class="r">'+eur(tF)+'</td><td class="r">'+eur(tP)+'</td><td class="r '+tom(tF-tP,true)+'">'+(tF-tP>=0?'+':'−')+pct(Math.abs(tP?(tF-tP)/tP*100:0))+'</td>':'')+'</tr>';
+  t+='<tr class="mute"><td>Zcampo · não conta <span class="cod">ZC</span></td><td class="r">'+cel(A,'ZC','Acumulado')+'</td><td class="r"></td><td class="r">'+cel(M,'ZC',nomeMes)+'</td>'+(cmp?'<td class="r">'+cel(F,'ZC','Acumulado até ao fim do mês anterior')+'</td><td class="r">'+cel(P,'ZC',String(ano-1))+'</td><td></td>':'')+'</tr>';
+  t+='<tr class="mute"><td>Total da folha (com Zcampo)</td><td class="r">'+(f.ano.total?v(eur(f.ano.total.valor),pDia(u,'Total · '+eur(f.ano.total.valor),f.ano.total.celula,'Total')):'—')+'</td><td></td><td class="r">'+(f.mes.total?v(eur(f.mes.total.valor),pDia(u,'Total do mês · '+eur(f.mes.total.valor),f.mes.total.celula,'Total')):'—')+'</td>'+(cmp?'<td class="r">'+(f.fecho.total?eur(f.fecho.total.valor):'—')+'</td><td class="r">'+(f.anterior.total?eur(f.anterior.total.valor):'—')+'</td><td></td>':'')+'</tr>';
+  t+='</tbody></table></div><div class="sobre">Valores sem IVA. A Zcampo fica fora de todos os totais: faturamos esses trabalhos em nome dela, porque o alvará dela não o permite, e o dinheiro entra e sai logo.</div>';
+  if(semAnt.length)t+='<div class="sobre">Em '+(ano-1)+' não havia série para '+semAnt.join(', ').toLowerCase()+'. Esses trabalhos não têm com que comparar.</div>';
+  // a folha é preenchida à mão: confirmar que o acumulado = fim do mês anterior + mês corrente
+  if(f.fecho&&f.fecho.ate){var dia=new Date(pd(f.mes.inicio).getTime()-864e5);if(iso(dia)===f.fecho.ate)FAT_S.concat([['ZC','Zcampo']]).forEach(function(z){var k=z[0],a=A[k]&&A[k].v||0,s=(F[k]&&F[k].v||0)+(M[k]&&M[k].v||0);if(Math.abs(a-s)>=0.01)t+='<div class="sobre warn">'+z[1]+': o acumulado do ano ('+eur(a)+') não é igual a '+per(f.anterior)+' ('+eur(F[k]&&F[k].v||0)+') mais '+nomeMes+' ('+eur(M[k]&&M[k].v||0)+'). Convém confirmar a folha.</div>'})}
+  t+='</section>';
+  // por mês
+  var L=fatMeses(ano),g='';
+  if(L.length){
+    g='<section class="cartao" aria-label="Faturação por mês"><div class="cab"><h2>Por mês · '+ano+' sem Zcampo</h2><div class="legenda">'+FAT_S.map(function(z){return '<span><i class="lg" style="background:'+fatCor(z[0])+'"></i>'+z[1]+'</span>'}).join('')+'</div></div>'+fatBarras(L)+
+      '<div class="rolo"><table style="min-width:640px"><thead><tr><th>Mês</th>'+FAT_S.map(function(z){return '<th class="r">'+z[1].split(' ')[0]+'</th>'}).join('')+'<th class="r">Total</th><th class="r mute">Zcampo</th></tr></thead><tbody>'+
+      L.map(function(m){return '<tr><td>'+m.nome+(m.corrente?' <span class="mute">(até '+dm(m.ate)+')</span>':'')+'</td>'+FAT_S.map(function(z){return '<td class="r">'+eur0(m.s[z[0]]||0)+'</td>'}).join('')+'<td class="r"><b>'+eur0(m.tot)+'</b></td><td class="r mute">'+eur0(m.zc)+'</td></tr>'}).join('')+'</tbody></table></div>'+
+      '<div class="sobre">Cada mês = acumulado do ano no fim desse mês menos o do mês anterior, a partir das folhas diárias. O mês corrente aparece mais claro porque ainda não fechou.'+(L.some(function(m){return m.nome.indexOf('–')>0})?' Meses sem folhas no resumo aparecem juntos.':'')+'</div></section>'}
+  // ano anterior completo, quando a folha de início de ano o tem
+  var fa=null;for(var i=E.dias.length-1;i>=0;i--){var x=E.dias[i].faturacao;if(x&&x.anterior&&x.anterior.ate===(ano-1)+'-12-31'){fa={d:E.dias[i],b:x.anterior};break}}
+  if(fa){var tz=fatSemZC(fa.b);g+='<section class="cartao" aria-label="Ano anterior"><h3>'+(ano-1)+' completo</h3><div class="nota">Faturação de '+(ano-1)+' sem Zcampo: <b>'+v(eur0(tz),pCalc((ano-1)+' sem Zcampo · '+eur(tz),'Tabela “'+esc(fa.b.periodo)+'” da folha de '+dmy(fa.d.data)+', sem a série Zcampo',fa.d))+'</b> ('+FAT_S.filter(function(z){return fatMapa(fa.b)[z[0]]}).map(function(z){return z[1].split(' ')[0].toLowerCase()+' '+eur0(fatMapa(fa.b)[z[0]].v)}).join(' · ')+').</div></section>'}
+  return h+c+t+g;
+}
+
 function obras(){
   var anos=[];E.obras.forEach(function(o){if(anos.indexOf(o.ano)<0)anos.push(o.ano)});anos.sort().reverse();
   if(!E.fAno||anos.indexOf(+E.fAno)<0)E.fAno=anos[0]||'';
@@ -431,6 +534,7 @@ function obras(){
 
 function calculo(){
   return cabecalho('Definições dos indicadores','Como é calculado')+'<section class="cartao" aria-label="Dicionário"><h2>Dicionário em linguagem simples</h2><div class="sobre" style="margin-bottom:8px">Os termos de gestão que aparecem no painel. Em cada ecrã, o “?” ao lado de um termo abre a mesma explicação.</div><dl>'+GLOSS.slice().sort(function(a,b){return a[1].localeCompare(b[1],'pt')}).map(function(g){return '<dt>'+esc(g[1])+'</dt><dd>'+esc(g[2])+'</dd>'}).join('')+'</dl></section><section class="cartao"><h2>Como cada número é calculado</h2><dl>'+
+  '<dt>Faturação por área</dt><dd>Tabelas “Resumo de Faturação s/IVA” e “Resumo Comparativo de Faturação s/IVA” da última folha do resumo financeiro, por série: OB obras (construção), JA manutenção (avenças), OI outras intervenções (obras pequenas que não são avenças), AL Alojamento Local Pés n’Areia. A série ZC (Zcampo) nunca conta: faturamos em nome da Zcampo e o dinheiro entra e sai logo. A faturação de cada mês é o acumulado do ano no fim desse mês menos o do mês anterior. Os objetivos “Faturação obra” e “Faturação manutenção” usam as séries OB e JA.</dd>'+
   '<dt>Saldo bancário total</dt><dd>Soma de todas as linhas do bloco “Saldos Bancários” da última folha do resumo financeiro, incluindo os depósitos a prazo.</dd>'+
   '<dt>Saldo final</dt><dd>Valor “Saldo Final” da última folha. É verificado contra o cálculo: bancos + a receber − todas as linhas de “Valor a Pagar”. Se divergir, aparece um aviso.</dd>'+
   '<dt>A pagar</dt><dd>Soma das linhas de “Valor a Pagar” da última folha. Cada linha é classificada pelo rótulo: fornecedores, impostos, salários, seguros ou outros.</dd>'+
@@ -786,10 +890,13 @@ function objDoc(){var a=Object.keys(E.objs).map(Number).sort(function(x,y){retur
 function objChave(l){return CHAVES_OBJ[nrm(l.area)+'|'+nrm(l.indicador)]||null}
 function objRecalc(){var o={},d=objDoc();if(d)(d.linhas||[]).forEach(function(l){var k=objChave(l);if(k&&l.meta_anual!=null)o[k]=l.meta_anual});E.obj=o}
 function obrasDoAno(a){return E.obras.filter(function(o){return o.ano===a})}
+// Valor acumulado de uma série de faturação no ano a, da última folha que a tem.
+function fatSerieAno(k,a){var u=fatUlt();if(!u||!u.faturacao.ano.ate||+u.faturacao.ano.ate.slice(0,4)!==a)return null;var x=fatMapa(u.faturacao.ano)[k];return x&&x.v!=null?{v:x.v,nome:x.nome,periodo:u.faturacao.ano.periodo,ate:u.faturacao.ano.ate}:null}
 function realizado(k){
   var h=new Date(),a=h.getFullYear(),u=ultimo(),r={v:null,nota:'',proj:null};
   if(k==='saldo_minimo'){if(u){r.v=u.saldo_final.valor;var da=E.dias.filter(function(d){return d.data.slice(0,4)==a&&d.saldo_final.valor!=null}),mn=da.reduce(function(m,d){return m==null||d.saldo_final.valor<m.saldo_final.valor?d:m},null);r.nota='Saldo final de '+dmy(u.data)+(mn?' · mínimo do ano '+eur0(mn.saldo_final.valor)+' em '+dm(mn.data):'');r.ano=da}}
   else if(k==='margem_obra'){var ob=obrasDoAno(a).filter(function(o){return o.lucro!=null&&o.orcamento&&o.orcamento.valor}),so=ob.reduce(function(s,o){return s+o.orcamento.valor},0),sl=ob.reduce(function(s,o){return s+o.lucro},0);if(so){r.v=sl/so*100;r.nota=ob.length+' obras de '+a+' com centro de custos · obras em curso têm custos por lançar'}}
+  else if((k==='faturacao_obra'||k==='faturacao_manutencao')&&fatSerieAno(k==='faturacao_obra'?'OB':'JA',a)){var fs=fatSerieAno(k==='faturacao_obra'?'OB':'JA',a);r.v=fs.v;r.nota='Faturado na série '+fs.nome+' do Resumo Financeiro diário ('+fs.periodo+', sem IVA)';var fr2=(pd(fs.ate)-new Date(a,0,1)+864e5)/(new Date(a+1,0,1)-new Date(a,0,1));r.proj=fr2>0?r.v/fr2:null}
   else if(k==='faturacao_obra'){var of=obrasDoAno(a).filter(function(o){return o.faturado&&o.faturado.valor!=null});if(of.length){r.v=of.reduce(function(s,o){return s+o.faturado.valor},0);r.nota=of.length+' obras com faturação registada';var fr=(h-new Date(a,0,1))/(new Date(a+1,0,1)-new Date(a,0,1));r.proj=fr>0?r.v/fr:null}else r.nota='Nenhuma obra tem o campo “Valor total faturado à Obra” preenchido'}
   else if(k==='faturacao_manutencao'){var md=E.man[a];if(md){var T=manTotais(manAvencas(md)),mm=md.meses_com_dados||[];r.v=T.rec;r.nota='Estimativa: avença × meses com horas registadas ('+manPeriodo(md)+')';r.proj=T.rec+T.fat*(12-(mm.length?mm[mm.length-1]:0));r.est=true}}
   else if(k==='margem_avenca'){var md2=E.man[a];if(md2){var T2=manTotais(manAvencas(md2));r.v=T2.margem;var nb=(manAvencas(md2)).filter(function(x){return x.margem!=null&&x.margem<manLimite()}).length;r.nota='Margem acumulada das avenças · '+nb+' abaixo do limite'}}
@@ -851,6 +958,9 @@ function exportarPdf(){
     lin('A receber de clientes',eur(soma(u.receber)));
     u.pagar.forEach(function(b){lin('A pagar · '+b.nome,b.valor==null?'sem dados':eur(b.valor))});
     lin('Saldo final',eur(u.saldo_final.valor)+(E.obj.saldo_minimo!=null?'  (mínimo '+eur0(E.obj.saldo_minimo)+')':''),true)}
+  var fu=fatUlt();if(fu){var ff=fu.faturacao,FA=fatMapa(ff.ano);tit('Faturação · '+(ff.ano.periodo||'')+' · sem IVA');
+    lin('Total sem Zcampo',eur(fatSemZC(ff.ano)),true);FAT_S.forEach(function(z){if(FA[z[0]])lin('   '+z[1],eur(FA[z[0]].v))});
+    if(FA.ZC)lin('   Zcampo (não conta)',eur(FA.ZC.v));lin('Faturado em '+MESES[+ff.mes.inicio.slice(5,7)-1]+' (sem Zcampo)',eur(fatSemZC(ff.mes)))}
   var al=listaAlertas();tit('Alertas · '+al.length);if(!al.length)lin('Sem alertas.');al.forEach(function(x){lin('['+x[0]+'] '+x[2],null,true);peq(x[3])});
   var curso=E.obras.filter(function(o){return estadoDe(o)==='Em curso'});
   tit('Obras em curso · '+curso.length);
@@ -1000,7 +1110,14 @@ function salariosEcra(){
   var dif2=fl.filter(function(x){return Math.abs(x.d)>=2});
   var fe='<section class="cartao" aria-label="Férias: recibos e mapa"><h2>Férias gozadas: recibos e mapa de férias · '+dif2.length+' com diferença de 2 dias ou mais</h2><div class="rolo"><table style="min-width:620px"><thead><tr><th>Pessoa</th><th>No mapa</th><th class="r">Gozadas até '+esc(u.nome.toLowerCase())+' (recibos)</th><th class="r">Marcadas até '+esc(u.nome.toLowerCase())+' (mapa)</th><th class="r">Diferença</th></tr></thead><tbody>'+fl.map(function(x){return '<tr><td>'+esc(x.nome)+'</td><td class="mute">'+esc(x.curto)+'</td><td class="r">'+String(x.g).replace('.',',')+'</td><td class="r">'+String(x.mapa).replace('.',',')+'</td><td class="r '+(Math.abs(x.d)>=2?'warn':'mute')+'">'+(x.d===0?'—':(x.d>0?'+':'−')+String(Math.abs(x.d)).replace('.',','))+'</td></tr>'}).join('')+'</tbody></table></div><div class="sobre">Dias de “Gozo de Férias” acumulados no último recibo, comparados com os dias úteis de férias marcados no mapa até ao fim desse mês (sem descontar feriados). Pode incluir férias do ano anterior.</div></section>';
   var cg=(d.corrigidos||[]).length?'<div class="sobre">Recibos corrigidos depois do ficheiro do mês: '+d.corrigidos.map(function(x){return esc(x.nome)+' ('+esc(x.mes.toLowerCase())+')'}).join(', ')+'. Vale a versão mais recente.</div>':'';
-  return h+av+k+tb+cg+'<div class="linha2">'+barras('Por departamento',d.departamentos||[])+barras('Por categoria',d.categorias||[])+'</div><div class="linha2">'+mov+'</div>'+fe;
+  // faltas por pessoa (quadro "Faltas" dos recibos); baixas, luto e nascimento ficam só em total
+  function diasH(x){if(!x)return '<span class="mute">—</span>';var dd=Math.floor(x+1e-6),hh=Math.round((x-dd)*8);if(hh===8){dd++;hh=0}return (dd?dd+(dd===1?' dia':' dias'):'')+(dd&&hh?' e ':'')+(hh?hh+' h':'')}
+  var temF=d.pessoas.some(function(p){return p.faltas}),fp=d.pessoas.filter(function(p){return p.faltas&&(p.faltas.justificadas||p.faltas.injustificadas)}).sort(function(a,b){var ta=a.faltas.justificadas+a.faltas.injustificadas,tb2=b.faltas.justificadas+b.faltas.injustificadas;return tb2-ta||b.faltas.injustificadas-a.faltas.injustificadas});
+  var fa='<section class="cartao" aria-label="Faltas por pessoa"><h2>Quem dá mais faltas · '+d.ano+'</h2>'+(!temF?'<div class="vazio">As faltas por pessoa aparecem depois da próxima sincronização.</div>':!fp.length?'<div class="vazio">Ninguém deu faltas nos meses lidos.</div>':
+    '<div class="rolo"><table style="min-width:640px"><thead><tr><th>Pessoa</th><th class="r">Injustificadas</th><th class="r">Justificadas</th><th class="r">Total</th><th>Meses com faltas</th></tr></thead><tbody>'+fp.map(function(p){var f=p.faltas,pm=f.por_mes||{};
+      return '<tr><td>'+esc(p.nome)+'</td><td class="r'+(f.injustificadas?' warn':'')+'"'+(f.injustificadas?' style="font-weight:600"':'')+'>'+diasH(f.injustificadas)+'</td><td class="r">'+diasH(f.justificadas)+'</td><td class="r" style="font-weight:600">'+diasH(f.justificadas+f.injustificadas)+'</td><td>'+Object.keys(pm).map(Number).sort(function(a,b){return a-b}).map(function(m){return pm[m].injustificadas?'<span class="warn">'+MESES[m-1].slice(0,3)+'*</span>':MESES[m-1].slice(0,3)}).join(', ')+'</td></tr>'}).join('')+'</tbody></table></div>'+
+    '<div class="sobre">Soma dos dias de falta do quadro “Faltas” de cada recibo ('+M.length+' meses de '+d.ano+'). Uma hora conta como 1/8 de dia. * mês com falta injustificada. As baixas, o luto e o nascimento não entram nesta lista; aparecem só em total, em “Ausências nos meses lidos”.</div>')+'</section>';
+  return h+av+k+tb+cg+'<div class="linha2">'+barras('Por departamento',d.departamentos||[])+barras('Por categoria',d.categorias||[])+'</div><div class="linha2">'+mov+'</div>'+fa+fe;
 }
 
 /* ---------- planeado (Teamup) e realizado ---------- */
@@ -1348,20 +1465,75 @@ function pmeEcra(){
 
 /* ---------- navegação ---------- */
 
-function rota(){var h=(location.hash||'').replace('#','');return ['geral','tesouraria','obras','pessoas','ferias','ponto','comercial','manutencao','contabilidade','salarios','objetivos','orcamento','pme','melhoria','calculo'].indexOf(h)>=0?h:'geral'}
+function rota(){var h=(location.hash||'').replace('#','');return ['geral','financas','producao','rh','gestao','tesouraria','faturacao','obras','pessoas','ferias','ponto','comercial','manutencao','contabilidade','salarios','objetivos','orcamento','pme','melhoria','calculo'].indexOf(h)>=0?h:'geral'}
 var adiado=false;
+/* ---------- painéis de grupo: um cartão de resumo por separador ---------- */
+function rPoco(v,l,cls){return '<div class="poco"><span class="'+(cls||'')+'">'+v+'</span><small>'+l+'</small></div>'}
+function rCartao(id,tit,pocos,vazio){var e=ECRAS.filter(function(x){return x[0]===id})[0];return '<section class="cartao" aria-label="'+esc(e[1])+'"><div class="cab"><h2>'+tit+'</h2><a href="#'+id+'">Ver '+esc(e[1])+'</a></div>'+(pocos?'<div class="grelha" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px">'+pocos+'</div>':'<div class="vazio">'+(vazio||'Ainda sem dados.')+'</div>')+'</section>'}
+var RESUMOS={
+  tesouraria:function(){var u=ultimo();if(!u)return rCartao('tesouraria','Tesouraria');var bt=bancoTotal(u),sf=u.saldo_final.valor,min=E.obj.saldo_minimo;
+    return rCartao('tesouraria','Tesouraria · folha de '+dmy(u.data),rPoco(eur0(bt),'Dinheiro nos bancos')+rPoco(eur0(sf),'Saldo final'+(min!=null?' · mínimo '+eur0(min):''),min!=null&&sf<min?'warn':'')+rPoco(eur0(soma(u.receber)),'A receber de clientes')+rPoco(eur0(soma(u.pagar)),'A pagar'))},
+  faturacao:function(){var u=fatUlt();if(!u)return rCartao('faturacao','Faturação');var f=u.faturacao,A=fatMapa(f.ano),ano=+(f.ano.ate||u.data).slice(0,4),cmp=f.fecho&&f.anterior&&f.anterior.ate&&+f.anterior.ate.slice(0,4)===ano-1,tF=cmp?fatSemZC(f.fecho):0,tP=cmp?fatSemZC(f.anterior):0;
+    return rCartao('faturacao','Faturação · '+ano+' sem Zcampo',rPoco(eur0(fatSemZC(f.ano)),'Faturado até '+dm(u.data))+rPoco(eur0(fatSemZC(f.mes)),'Faturado em '+MESES[+f.mes.inicio.slice(5,7)-1])+(cmp&&tP?rPoco((tF>=tP?'+':'−')+pct(Math.abs((tF-tP)/tP*100)),'Face a '+(ano-1)+' no mesmo período',tF>=tP?'ok':'warn'):'')+rPoco(eur0(A.OB&&A.OB.v),'Obras')+rPoco(eur0(A.JA&&A.JA.v),'Manutenção'))},
+  contabilidade:function(){return contabResumo()||rCartao('contabilidade','Contabilidade')},
+  objetivos:function(){var d=objDoc();if(!d)return rCartao('objetivos','Objetivos');
+    return rCartao('objetivos','Objetivos · '+d.ano,(d.linhas||[]).map(function(l){var k=objChave(l),r=k?realizado(k):{v:null},pc=l.unidade.indexOf('%')>=0,f=pc?pct:eur0,m=l.meta_anual,minimo=k==='saldo_minimo'||k==='margem_avenca'||k==='margem_obra';
+      var ok=m==null||r.v==null?null:(minimo||pc?r.v>=m:(r.proj!=null?r.proj>=m:null));
+      return rPoco(r.v==null?'—':f(r.v),(l.area?esc(l.area)+' · ':'')+esc(l.indicador.charAt(0).toLowerCase()+l.indicador.slice(1))+(m==null?' · meta por definir':' · meta '+f(m)+(ok==null?'':ok?' · no caminho':' · abaixo')),ok==null?'':ok?'ok':'warn')}).join(''))},
+  obras:function(){if(!E.obras.length)return rCartao('obras','Obras');var a=new Date().getFullYear(),curso=E.obras.filter(function(o){return estadoDe(o)==='Em curso'}),so=0,sl=0;curso.forEach(function(o){so+=o.orcamento&&o.orcamento.valor||0;sl+=o.lucro||0});
+    var semF=curso.filter(function(o){return !o.faturado||o.faturado.valor==null}).length,term=E.obras.filter(function(o){return o.ano==a&&estadoDe(o)==='Terminada'}).length;
+    return rCartao('obras','Obras',rPoco(curso.length,'Obras em curso')+rPoco(eur0(so),'Orçamento das obras em curso')+rPoco(so?pct(sl/so*100):'—','Margem média em curso'+(E.obj.margem_obra!=null?' · objetivo '+pct(E.obj.margem_obra):''),E.obj.margem_obra!=null&&so&&sl/so*100<E.obj.margem_obra?'warn':'')+rPoco(semF,'Em curso sem faturação registada',semF?'warn':'')+rPoco(term,'Terminadas em '+a))},
+  comercial:function(){return comercialResumo()||rCartao('comercial','Comercial')},
+  manutencao:function(){return manutencaoResumo()||rCartao('manutencao','Manutenção')},
+  pessoas:function(){if(!E.pessoas.length)return rCartao('pessoas','Pessoas e equipas');var at=E.pessoas.filter(function(p){return (p.estado||'ativo')!=='saiu'}),se=at.filter(function(p){return !p.equipa}).length,ba=at.filter(function(p){return p.estado==='baixa'}).length,sub=at.filter(function(p){return p.estado==='substituir'}).length;
+    return rCartao('pessoas','Pessoas e equipas',rPoco(at.length,'Pessoas na empresa')+rPoco(E.equipas.length,'Equipas')+rPoco(se,'Sem equipa atribuída',se?'warn':'')+rPoco(ba,'De baixa')+rPoco(sub,'A substituir',sub?'warn':''))},
+  ferias:function(){if(!E.ferias.length)return rCartao('ferias','Férias');var fora=foraNaSemana(),nc=fora.filter(function(f){return f.l.length&&f.l.every(function(x){return x.confirmar})}).length;
+    return rCartao('ferias','Férias',rPoco(fora.length,'Fora esta semana')+rPoco(nc,'Com data por confirmar',nc?'warn':'')+(fora.length?'<div class="poco" style="grid-column:span 2"><small>Quem está fora</small><span style="font-size:15px;font-family:var(--fb)">'+fora.slice(0,6).map(function(f){return esc(f.nome)}).join(', ')+(fora.length>6?' e mais '+(fora.length-6):'')+'</span></div>':''))},
+  ponto:function(){var anos=Object.keys(E.ponto).map(Number).sort(function(a,b){return b-a}),d=E.ponto[anos[0]];if(!d)return rCartao('ponto','Ponto');
+    var td=0,tc=0,uma=0;d.pessoas.forEach(function(p){var x=0,c=0;p.meses.forEach(function(m){x+=m.dias;c+=m.completos});td+=x;tc+=c;if(x>=20&&c/x<0.2)uma++});var fp=(d.ferias_pendentes||[]).length;
+    return rCartao('ponto','Ponto · até '+dmy(d.fim),rPoco(d.pessoas.filter(function(p){return p.meses.some(function(m){return m.dias})}).length,'Pessoas com picagens')+rPoco(td?Math.round(tc/td*100)+' %':'—','Dias com entrada e saída picadas')+rPoco(uma,'Pessoas que quase só picam uma vez',uma?'warn':'')+rPoco(fp,'Pedidos de férias por aprovar',fp?'warn':''))},
+  salarios:function(){var d=salDoc();if(!d)return rCartao('salarios','Salários');var M=d.meses.filter(function(m){return !m.incompleto}),u=M[M.length-1],br=M.reduce(function(s,m){return s+m.bruto},0),he=M.reduce(function(s,m){return s+(m.h_extra||0)},0),inj=(d.ausencias||[]).filter(function(a){return a.tipo==='Falta Injustificada'})[0];
+    return rCartao('salarios','Salários · até '+esc(u.nome.toLowerCase())+' de '+d.ano,rPoco(u.n,'Pessoas com recibo em '+esc(u.nome.toLowerCase()))+rPoco(eur0(br),'Remunerações brutas no ano')+rPoco(horas(he),'Horas extra')+(inj?rPoco(String(inj.dias).replace('.',',')+' dias','Faltas injustificadas · '+inj.pessoas+(inj.pessoas===1?' pessoa':' pessoas'),inj.dias?'warn':''):''))},
+  orcamento:function(){var B=orcBase();if(!B)return rCartao('orcamento','Orçamento '+ORC_ANO,'','Sem balancetes de '+(ORC_ANO-1)+'.');var O=E.orc||{},L=O.linhas||{},Mt=O.metas||{},tO=orcTot(L),nL=ORC_L.filter(function(l){return L[l[0]]!=null}).length,me=orcMetas(B),nM=me.filter(function(m){return Mt[m.k]!=null}).length;
+    return rCartao('orcamento','Orçamento '+ORC_ANO,rPoco(tO.vn==null?'por definir':eur0(tO.vn),'Volume de negócios orçado')+rPoco(tO.ebitda==null?'por definir':eur0(tO.ebitda),'EBITDA orçado',tO.ebitda!=null&&tO.ebitda<0?'warn':'')+rPoco(nL+' de '+ORC_L.length,'Rubricas preenchidas',nL<ORC_L.length?'warn':'ok')+rPoco(nM+' de '+me.length,'Metas definidas',nM<me.length?'warn':'ok'))},
+  pme:function(){var P=E.pme;if(!P||!P.criterios)return rCartao('pme','PME Líder');var A=P.anos||{},ys=Object.keys(A).sort(),ul=ys[ys.length-1],pr=pmeProjecao(0),h='';
+    if(ul){var v=pmeVeredicto(P.criterios,A[ul].ind);h+=rPoco(v.txt,'Contas de '+ul+' · edição de '+A[ul].edicao+' · '+v.det,v.cls)}
+    if(pr){var w=pmeVeredicto(P.criterios,pr);h+=rPoco(w.txt,'Projeção de '+(ORC_ANO-1)+' · '+w.det,w.cls)}
+    return rCartao('pme','PME Líder',h)},
+  melhoria:function(){var L=melLista(melDados()),I=(E.mel&&E.mel.itens)||{},c={};MEL_EST.forEach(function(e){c[e]=0});L.forEach(function(x){c[(I[x.id]&&I[x.id].estado)||MEL_EST[0]]++});
+    return rCartao('melhoria','Melhorar a empresa',rPoco(L.length,'Sugestões')+rPoco(c['Por decidir'],'Por decidir',c['Por decidir']?'warn':'')+rPoco(c['Aceite']+c['Em curso'],'Aceites ou em curso')+rPoco(c['Feita'],'Feitas',c['Feita']?'ok':''))}
+};
+var GRUPO_INTRO={financas:'O dinheiro da empresa: saldos, faturação, contas do ano e objetivos.',producao:'O trabalho em curso e o que está para entrar: obras, propostas e avenças de manutenção.',rh:'As pessoas: equipas, férias, assiduidade e salários.',gestao:'O que se prepara para o futuro: orçamento, distinção PME Líder e melhorias.'};
+function grupoEcra(id){var g=GRUPOS.filter(function(x){return x[0]===id})[0];
+  return cabecalho(GRUPO_INTRO[id]||'',g[1])+g[2].map(function(s){try{return RESUMOS[s]?RESUMOS[s]():''}catch(e){return rCartao(s,ECRAS.filter(function(x){return x[0]===s})[0][1],'','Não foi possível calcular o resumo.')}}).join('')}
+function grupoDe(id){var g=GRUPOS.filter(function(x){return x[0]===id||x[2].indexOf(id)>=0})[0];return g?g[0]:null}
+function desenhaMenu(r){
+  if(E.menuRota!==r){E.menuRota=r;E.menuG=grupoDe(r)}// ao mudar de ecrã, abre o grupo desse ecrã
+  function lk(e){return e[2]?'<a class="off" aria-disabled="true" tabindex="-1">'+e[1]+' <span>'+e[2]+'</span></a>':'<a href="#'+e[0]+'"'+(e[0]===r?' aria-current="page"':'')+'>'+e[1]+'</a>'}
+  function ecra(id){return ECRAS.filter(function(e){return e[0]===id})[0]}
+  var soltos=ECRAS.filter(function(e){return !grupoDe(e[0])}),h=soltos.filter(function(e){return e[0]==='geral'}).map(lk).join('');
+  GRUPOS.forEach(function(g){var ab=E.menuG===g[0],tem=g[2].indexOf(r)>=0||r===g[0];
+    h+='<button type="button" class="grupo'+(tem?' tem':'')+'" data-grupo="'+g[0]+'" aria-expanded="'+ab+'" aria-controls="g-'+g[0]+'"><span>'+g[1]+'</span><i aria-hidden="true"></i></button>'+
+      '<div class="sub" id="g-'+g[0]+'"'+(ab?'':' hidden')+'><a href="#'+g[0]+'"'+(r===g[0]?' aria-current="page"':'')+'>Resumo</a>'+g[2].map(ecra).filter(Boolean).map(lk).join('')+'</div>'});
+  h+=soltos.filter(function(e){return e[0]!=='geral'}).map(lk).join('');
+  document.getElementById('menu').innerHTML=h;
+}
+document.getElementById('menu').addEventListener('click',function(e){var b=e.target.closest('.grupo');if(!b)return;
+  var g=b.dataset.grupo,r=rota();
+  if(!MOVEL.matches&&r!==g){E.menuG=g;E.menuRota=g;location.hash=g;return}// abre o painel do grupo com a lista aberta
+  E.menuG=E.menuG===g?null:g;desenhaMenu(r);var n=document.querySelector('.menu .grupo[data-grupo="'+b.dataset.grupo+'"]');if(n)n.focus()});
 function render(forcar){
   var ae=document.activeElement;
   if(!forcar&&ae&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)&&document.getElementById('main').contains(ae)){adiado=true;return}
   adiado=false;
   var r=rota();prov=[];
-  document.getElementById('menu').innerHTML=ECRAS.map(function(e){return e[2]?'<a class="off" aria-disabled="true" tabindex="-1">'+e[1]+' <span>'+e[2]+'</span></a>':'<a href="#'+e[0]+'"'+(e[0]===r?' aria-current="page"':'')+'>'+e[1]+'</a>'}).join('');
+  desenhaMenu(r);
   var m=document.getElementById('main');
   if(!E.pronto&&!E.erro){m.innerHTML='<div class="vazio">A carregar os dados…</div>';return}
-  m.innerHTML=r==='tesouraria'?tesouraria():r==='obras'?obras():r==='pessoas'?pessoasEcra():r==='ferias'?feriasEcra():r==='ponto'?pontoEcra():r==='comercial'?comercialEcra():r==='manutencao'?manutencaoEcra():r==='contabilidade'?contabilidadeEcra():r==='salarios'?salariosEcra():r==='objetivos'?objetivosEcra():r==='orcamento'?orcamentoEcra():r==='pme'?pmeEcra():r==='melhoria'?melhoriaEcra():r==='calculo'?calculo():vistaGeral();
+  m.innerHTML=GRUPOS.some(function(g){return g[0]===r})?grupoEcra(r):r==='tesouraria'?tesouraria():r==='faturacao'?faturacaoEcra():r==='obras'?obras():r==='pessoas'?pessoasEcra():r==='ferias'?feriasEcra():r==='ponto'?pontoEcra():r==='comercial'?comercialEcra():r==='manutencao'?manutencaoEcra():r==='contabilidade'?contabilidadeEcra():r==='salarios'?salariosEcra():r==='objetivos'?objetivosEcra():r==='orcamento'?orcamentoEcra():r==='pme'?pmeEcra():r==='melhoria'?melhoriaEcra():r==='calculo'?calculo():vistaGeral();
   var l=E.log[0],ul=l&&l.quando||(ultimo()&&ultimo().lido_em);
   document.getElementById('ult').textContent=ul?hora(ul).replace(' às ',' · '):'sem dados';
-  var et=ECRAS.filter(function(e){return e[0]===r})[0];document.getElementById('mtit').textContent=et?et[1]:r==='calculo'?'Como é calculado':'';
+  var et=ECRAS.filter(function(e){return e[0]===r})[0]||GRUPOS.filter(function(g){return g[0]===r}).map(function(g){return [g[0],g[1]]})[0];document.getElementById('mtit').textContent=et?et[1]:r==='calculo'?'Como é calculado':'';
   simples(r);
   movel(r);
 }
@@ -1426,8 +1598,9 @@ function simples(r){
 }
 function mostraAjuda(btn){
   var g=GLOSS[+btn.dataset.aj],o=document.getElementById('origem');if(!g)return;
-  o.innerHTML='<div class="et">Em linguagem simples</div><div class="ti">'+esc(g[1])+'</div><div class="de">'+esc(g[2])+'</div>';
-  o.hidden=false;
+  if(!o.hidden&&o._de===btn){fechaOrigem();return}
+  o.innerHTML=FECHA+'<div class="et">Em linguagem simples</div><div class="ti">'+esc(g[1])+'</div><div class="de">'+esc(g[2])+'</div>';
+  abreOrigem(o,btn);
   var r=btn.getBoundingClientRect(),w=o.offsetWidth,h=o.offsetHeight,x=Math.min(Math.max(16,r.left-20),window.innerWidth-w-16),y=r.bottom+8;if(y+h>window.innerHeight-8)y=Math.max(8,r.top-h-8);
   o.style.left=x+'px';o.style.top=y+'px';
 }
@@ -1469,7 +1642,7 @@ document.getElementById('main').addEventListener('dragstart',function(e){var b=e
 document.getElementById('main').addEventListener('dragover',function(e){var z=e.target.closest&&e.target.closest('[data-drop]');if(z&&E.podeEditar){e.preventDefault();z.classList.add('alvo')}});
 document.getElementById('main').addEventListener('dragleave',function(e){var z=e.target.closest&&e.target.closest('[data-drop]');if(z)z.classList.remove('alvo')});
 document.getElementById('main').addEventListener('drop',function(e){var z=e.target.closest&&e.target.closest('[data-drop]');if(!z)return;e.preventDefault();z.classList.remove('alvo');atribuirEquipa(e.dataTransfer.getData('text/plain'),z.dataset.drop)});
-window.addEventListener('hashchange',function(){document.getElementById('origem').hidden=true;render(true);window.scrollTo(0,0)});
+window.addEventListener('hashchange',function(){fechaOrigem();render(true);window.scrollTo(0,0)});
 document.getElementById('main').addEventListener('focusout',function(){if(adiado)setTimeout(function(){render()},0)});
 document.getElementById('main').addEventListener('click',function(e){
   if(e.target.closest('.aj'))return;
