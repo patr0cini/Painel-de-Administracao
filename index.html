@@ -222,12 +222,12 @@ code{font-family:ui-monospace,Menlo,monospace;background:var(--poco);padding:1px
 (function(){
 'use strict';
 var SP_RESUMO='https://wegarden.sharepoint.com/sites/Administrativo/Documentos%20Partilhados/Diversos/Resumo%20Financeiro%20di%C3%A1rio.xlsx';
-var ECRAS=[['geral','Vista geral'],['tesouraria','Tesouraria'],['faturacao','Faturação'],['obras','Obras'],['pessoas','Pessoas e equipas'],['ferias','Férias'],['ponto','Ponto'],['comercial','Comercial'],['manutencao','Manutenção'],['contabilidade','Contabilidade'],['salarios','Salários'],['objetivos','Objetivos'],['orcamento','Orçamento 2027'],['pme','PME Líder'],['melhoria','Melhorar a empresa']];
+var ECRAS=[['geral','Vista geral'],['tesouraria','Tesouraria'],['faturacao','Faturação'],['obras','Obras'],['pessoas','Pessoas e equipas'],['ferias','Férias'],['ponto','Ponto'],['comercial','Comercial'],['manutencao','Manutenção'],['contabilidade','Contabilidade'],['salarios','Salários'],['objetivos','Objetivos'],['orcamento','Orçamento 2027'],['pme','PME Líder'],['melhoria','Melhorar a empresa'],['reunioes','Reuniões de Gestão']];
 // Menu lateral: ecrãs agrupados por tipo; cada grupo abre como uma lista dentro do menu.
-var GRUPOS=[['financas','Finanças',['tesouraria','faturacao','contabilidade','objetivos']],['producao','Produção / Comercial',['obras','comercial','manutencao']],['rh','Recursos Humanos',['pessoas','ferias','ponto','salarios']],['gestao','Gestão',['orcamento','pme','melhoria']]];
+var GRUPOS=[['financas','Finanças',['tesouraria','faturacao','contabilidade','objetivos']],['producao','Produção / Comercial',['obras','comercial','manutencao']],['rh','Recursos Humanos',['pessoas','ferias','ponto','salarios']],['gestao','Gestão',['reunioes','orcamento','pme','melhoria']]];
 var MESES=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
 var TIPOS={materiais:'Materiais e subempreitadas',pessoal:'Pessoal',transportes:'Transportes',estrutura:'Custos de estrutura',irc:'IRC'};
-var E={pme:null,ewp:{},ponto:{},dobras:{},kpis:{},mel:{},melMsg:'',melLv:'',melEst:'',orc:{},orcMsg:'',plan:{},mVista:'rent',manObra:{},cli:[],sal:{},cont:{},objs:{},dl:null,man:{},mAno:null,mEq:'',mLim:30,com:{},pipe:null,cAno:null,cq:'',cProg:'',cResp:'',cGrau:'',cLim:40,fed:[],fsel:null,fform:{},fmsg:'',fmsgErro:false,fLista:[],eqAbrir:false,eqr:{},eqmsg:'',apagar:null,apagarEq:null,pessoas:[],equipas:[],ferias:[],pv:'org',psel:null,rasc:null,pmsg:'',fMes:null,fTodos:false,fEq:'',nomes:{},uid:null,dias:[],obras:[],estados:{},obj:{},log:[],pronto:false,erro:null,podeEditar:false,periodo:90,fEstado:'Todas',fAno:'',sel:null};
+var E={reu:[],reuForm:null,reuMsg:'',pme:null,ewp:{},ponto:{},dobras:{},kpis:{},mel:{},melMsg:'',melLv:'',melEst:'',orc:{},orcMsg:'',plan:{},mVista:'rent',manObra:{},cli:[],sal:{},cont:{},objs:{},dl:null,man:{},mAno:null,mEq:'',mLim:30,com:{},pipe:null,cAno:null,cq:'',cProg:'',cResp:'',cGrau:'',cLim:40,fed:[],fsel:null,fform:{},fmsg:'',fmsgErro:false,fLista:[],eqAbrir:false,eqr:{},eqmsg:'',apagar:null,apagarEq:null,pessoas:[],equipas:[],ferias:[],pv:'org',psel:null,rasc:null,pmsg:'',fMes:null,fTodos:false,fEq:'',nomes:{},uid:null,dias:[],obras:[],estados:{},obj:{},log:[],pronto:false,erro:null,podeEditar:false,periodo:90,fEstado:'Todas',fAno:'',sel:null};
 var db=null,prov=[];
 
 /* ---------- formatação ---------- */
@@ -1468,14 +1468,59 @@ function pmeEcra(){
   return h+intro+cd+k+tb+vg+ce;
 }
 
+/* ---------- reuniões de gestão ---------- */
+// A administração escreve o que se falou; a análise (resumo, decisões, próximos passos e sugestões)
+// é escrita pelo Claude e gravada no campo "analise" do mesmo documento.
+var REU_EST=['por fazer','em curso','feito'];
+function reuLista(){return (E.reu||[]).slice().sort(function(a,b){return (b.data||'')>(a.data||'')?1:(b.data||'')<(a.data||'')?-1:(b.criada_em||'')>(a.criada_em||'')?1:-1})}
+function reuTodos(){var L=[];reuLista().forEach(function(r){((r.analise&&r.analise.todos)||[]).forEach(function(t,i){L.push({r:r,t:t,i:i})})});return L}
+function reuDoc(id){return (E.reu||[]).filter(function(r){return r.id===id})[0]}
+function reuGravar(doc,msg){
+  if(!db)return Promise.reject();var d=Object.assign({},doc);delete d.id;E.reuMsg='A guardar…';render(true);
+  return db.doc('reunioes/'+doc.id).set(d).then(function(){E.reuMsg=msg||'Guardado.';render(true)},function(){E.reuMsg='Não foi possível guardar. Tente outra vez.';render(true)});
+}
+function reuNome(lv){return MEL_LIVROS[lv]?MEL_LIVROS[lv][0]:lv}
+function reunioesEcra(){
+  var L=reuLista(),T=reuTodos(),hoje=iso(new Date()),dis=E.podeEditar?'':' disabled',F=E.reuForm;
+  var ab=T.filter(function(x){return x.t.estado!=='feito'}),at=ab.filter(function(x){return x.t.prazo&&x.t.prazo<hoje}),pt=L.filter(function(r){return !r.analise||r.reanalisar});
+  var h=cabecalho('Atas das reuniões de gestão, próximos passos e sugestões','Reuniões de Gestão',E.podeEditar&&!F?'<button type="button" class="ctl" data-reunova="1">Nova reunião</button>':'');
+  var msg=E.reuMsg?'<div class="sobre '+(/Não foi/.test(E.reuMsg)?'warn':'')+'" role="status">'+esc(E.reuMsg)+'</div>':'';
+  var k='<section class="grelha" aria-label="Indicadores">'+kpi('Reuniões registadas',String(L.length),L.length?'última a '+dmy(L[0].data):'ainda nenhuma')+kpi('Próximos passos por fazer',String(ab.length),T.length?T.length+' no total':'sem tarefas')+kpi('Com o prazo ultrapassado',String(at.length),at.length?'ver a lista abaixo':'nenhum',at.length?'warn':'')+kpi('À espera de análise',String(pt.length),pt.length?'a análise é feita na sincronização da manhã, ou quando a pedir no Claude':'todas analisadas',pt.length?'warn':'')+'</section>';
+  var fm='';
+  if(F){fm='<section class="cartao" aria-label="Escrever reunião"><h2>'+(F.id?'Editar a reunião':'Nova reunião')+'</h2><div class="form" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">'+
+    campo('reu-data','Data','<input id="p-reu-data" data-reu="data" type="date" value="'+esc(F.data||'')+'">')+
+    campo('reu-titulo','Título (opcional)','<input id="p-reu-titulo" data-reu="titulo" type="text" value="'+esc(F.titulo||'')+'" placeholder="Reunião de gestão">')+
+    campo('reu-part','Quem esteve','<input id="p-reu-part" data-reu="participantes" type="text" value="'+esc(F.participantes||'')+'" placeholder="Nomes separados por vírgulas">',true)+
+    campo('reu-texto','O que foi falado','<textarea id="p-reu-texto" data-reu="texto" rows="16" style="min-height:300px;padding:10px;line-height:1.5" placeholder="Escreva ou cole aqui as notas da reunião, como estiverem.">'+esc(F.texto||'')+'</textarea>',true)+
+    '</div><div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap"><button type="button" class="ctl" data-reuguardar="1" style="background:var(--verde-esc);color:#fff;border-color:var(--verde-esc)">Guardar</button><button type="button" class="ctl" data-reucancelar="1">Cancelar</button></div><div class="sobre">O texto fica guardado tal como o escrever. Depois de guardar, a análise aparece na sincronização da manhã seguinte, ou logo, se pedir ao Claude para analisar a reunião.</div></section>'}
+  var tt='';
+  if(ab.length){ab.sort(function(a,b){return (a.t.prazo||'9999')<(b.t.prazo||'9999')?-1:1});
+    tt='<section class="cartao" aria-label="Próximos passos em aberto"><h2>Próximos passos em aberto · '+ab.length+'</h2><div class="rolo"><table style="min-width:680px"><thead><tr><th>O que fazer</th><th>Quem</th><th>Prazo</th><th>Reunião</th><th>Estado</th></tr></thead><tbody>'+ab.map(function(x){var late=x.t.prazo&&x.t.prazo<hoje;return '<tr><td style="white-space:normal;min-width:240px">'+esc(x.t.tarefa)+'</td><td>'+esc(x.t.responsavel||'—')+'</td><td class="'+(late?'warn':'')+'">'+(x.t.prazo?dmy(x.t.prazo)+(late?' · atrasado':''):'<span class="mute">sem prazo</span>')+'</td><td><a href="#reunioes" data-reuabrir="'+esc(x.r.id)+'">'+dmy(x.r.data)+'</a></td><td><select data-reutodo="'+esc(x.r.id)+'|'+x.i+'" aria-label="Estado"'+dis+'>'+REU_EST.map(function(o){return '<option'+(o===(x.t.estado||'por fazer')?' selected':'')+'>'+o+'</option>'}).join('')+'</select></td></tr>'}).join('')+'</tbody></table></div></section>'}
+  function cartao(r){var a=r.analise,lista=function(v){return (v||[]).map(function(x){return '<div class="nota">'+esc(x)+'</div>'}).join('')};
+    var tg=!a?'<span class="tag t-aviso">à espera de análise</span>':r.reanalisar?'<span class="tag t-aviso">texto alterado; análise por atualizar</span>':'<span class="tag t-curso">analisada</span>';
+    var corpo=a?((a.resumo?'<p style="margin:8px 0 0;max-width:78ch;line-height:1.5"><b>Em resumo.</b> '+esc(a.resumo)+'</p>':'')+
+      (a.decisoes&&a.decisoes.length?'<h3 style="margin:16px 0 6px">Decisões</h3>'+lista(a.decisoes):'')+
+      (a.todos&&a.todos.length?'<h3 style="margin:16px 0 6px">Próximos passos</h3>'+a.todos.map(function(t,i){return '<div class="nota cab"><span>'+(t.estado==='feito'?'<s class="mute">'+esc(t.tarefa)+'</s>':esc(t.tarefa))+'<br><span class="cod">'+esc(t.responsavel||'sem responsável')+(t.prazo?' · até '+dmy(t.prazo):'')+'</span></span><select data-reutodo="'+esc(r.id)+'|'+i+'" aria-label="Estado"'+dis+'>'+REU_EST.map(function(o){return '<option'+(o===(t.estado||'por fazer')?' selected':'')+'>'+o+'</option>'}).join('')+'</select></div>'}).join(''):'')+
+      (a.sugestoes&&a.sugestoes.length?'<h3 style="margin:16px 0 6px">Sugestões de gestão</h3>'+a.sugestoes.map(function(x){return '<div class="nota"><span class="tag t-fim">'+esc(reuNome(x.livro))+'</span> <b>'+esc(x.conceito||'')+'</b><div style="margin-top:4px;line-height:1.5">'+esc(x.texto)+'</div>'+(x.mel?'<a class="sobre" href="#melhoria">Ver a sugestão relacionada em Melhorar a empresa</a>':'')+'</div>'}).join(''):'')+
+      (a.perguntas&&a.perguntas.length?'<h3 style="margin:16px 0 6px">Ficou por esclarecer</h3>'+lista(a.perguntas):'')+
+      '<div class="sobre" style="margin-top:10px">Análise feita pelo Claude em '+esc(hora(a.feita_em||''))+'. É uma proposta: confirme responsáveis e prazos.</div>'):'<div class="vazio">A análise ainda não foi feita.</div>';
+    return '<section class="cartao" aria-label="Reunião de '+esc(dmy(r.data))+' '+esc(r.id)+'"><div class="cab"><div><div class="sobre">'+esc(r.participantes||'')+'</div><h2>Reunião de '+dmy(r.data)+(r.titulo?' · '+esc(r.titulo):'')+'</h2></div>'+tg+'</div>'+corpo+
+      '<details style="margin-top:14px"><summary style="cursor:pointer;font-weight:600">O que foi falado, na íntegra</summary><div style="white-space:pre-wrap;line-height:1.55;margin-top:8px;max-width:90ch">'+esc(r.texto||'')+'</div></details>'+
+      (E.podeEditar?'<div style="margin-top:10px"><button type="button" class="ctl" data-reueditar="'+esc(r.id)+'">Editar o texto</button></div>':'')+'</section>'}
+  var intro='<p class="intro" style="margin-top:0">Escreva aqui o que se falou em cada reunião de gestão. O texto fica guardado na íntegra; a partir dele o Claude escreve um resumo, as decisões, os próximos passos com responsável e prazo, e sugestões de gestão baseadas nos cinco livros do separador Melhorar a empresa.</p>';
+  return h+msg+(L.length||F?'':intro)+k+fm+tt+(L.length?L.map(cartao).join(''):(F?'':'<div class="cartao"><div class="vazio">Ainda não há reuniões. Carregue em “Nova reunião”.</div></div>'));
+}
+
 /* ---------- navegação ---------- */
 
-function rota(){var h=(location.hash||'').replace('#','');return ['geral','financas','producao','rh','gestao','tesouraria','faturacao','obras','pessoas','ferias','ponto','comercial','manutencao','contabilidade','salarios','objetivos','orcamento','pme','melhoria','calculo'].indexOf(h)>=0?h:'geral'}
+function rota(){var h=(location.hash||'').replace('#','');return ['geral','financas','producao','rh','gestao','tesouraria','faturacao','obras','pessoas','ferias','ponto','comercial','manutencao','contabilidade','salarios','objetivos','orcamento','pme','melhoria','reunioes','calculo'].indexOf(h)>=0?h:'geral'}
 var adiado=false;
 /* ---------- painéis de grupo: um cartão de resumo por separador ---------- */
 function rPoco(v,l,cls){return '<div class="poco"><span class="'+(cls||'')+'">'+v+'</span><small>'+l+'</small></div>'}
 function rCartao(id,tit,pocos,vazio){var e=ECRAS.filter(function(x){return x[0]===id})[0];return '<section class="cartao" aria-label="'+esc(e[1])+'"><div class="cab"><h2>'+tit+'</h2><a href="#'+id+'">Ver '+esc(e[1])+'</a></div>'+(pocos?'<div class="grelha" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px">'+pocos+'</div>':'<div class="vazio">'+(vazio||'Ainda sem dados.')+'</div>')+'</section>'}
 var RESUMOS={
+  reunioes:function(){var L=reuLista(),T=reuTodos(),h=iso(new Date()),ab=T.filter(function(x){return x.t.estado!=='feito'}),at=ab.filter(function(x){return x.t.prazo&&x.t.prazo<h});if(!L.length)return rCartao('reunioes','Reuniões de Gestão','','Ainda não há reuniões registadas.');
+    return rCartao('reunioes','Reuniões de Gestão · última a '+dmy(L[0].data),rPoco(String(L.length),'Reuniões registadas')+rPoco(String(ab.length),'Próximos passos por fazer')+rPoco(String(at.length),'Com o prazo ultrapassado',at.length?'warn':'')+rPoco(String(L.filter(function(r){return !r.analise||r.reanalisar}).length),'À espera de análise'))},
   tesouraria:function(){var u=ultimo();if(!u)return rCartao('tesouraria','Tesouraria');var bt=bancoTotal(u),sf=u.saldo_final.valor,min=E.obj.saldo_minimo;
     return rCartao('tesouraria','Tesouraria · folha de '+dmy(u.data),rPoco(eur0(bt),'Dinheiro nos bancos')+rPoco(eur0(sf),'Saldo final'+(min!=null?' · mínimo '+eur0(min):''),min!=null&&sf<min?'warn':'')+rPoco(eur0(soma(u.receber)),'A receber de clientes')+rPoco(eur0(soma(u.pagar)),'A pagar'))},
   faturacao:function(){var u=fatUlt();if(!u)return rCartao('faturacao','Faturação');var f=u.faturacao,A=fatMapa(f.ano),ano=+(f.ano.ate||u.data).slice(0,4),cmp=f.fecho&&f.anterior&&f.anterior.ate&&+f.anterior.ate.slice(0,4)===ano-1,tF=cmp?fatSemZC(f.fecho):0,tP=cmp?fatSemZC(f.anterior):0;
@@ -1508,7 +1553,7 @@ var RESUMOS={
   melhoria:function(){var L=melLista(melDados()),I=(E.mel&&E.mel.itens)||{},c={};MEL_EST.forEach(function(e){c[e]=0});L.forEach(function(x){c[(I[x.id]&&I[x.id].estado)||MEL_EST[0]]++});
     return rCartao('melhoria','Melhorar a empresa',rPoco(L.length,'Sugestões')+rPoco(c['Por decidir'],'Por decidir',c['Por decidir']?'warn':'')+rPoco(c['Aceite']+c['Em curso'],'Aceites ou em curso')+rPoco(c['Feita'],'Feitas',c['Feita']?'ok':''))}
 };
-var GRUPO_INTRO={financas:'O dinheiro da empresa: saldos, faturação, contas do ano e objetivos.',producao:'O trabalho em curso e o que está para entrar: obras, propostas e avenças de manutenção.',rh:'As pessoas: equipas, férias, assiduidade e salários.',gestao:'O que se prepara para o futuro: orçamento, distinção PME Líder e melhorias.'};
+var GRUPO_INTRO={financas:'O dinheiro da empresa: saldos, faturação, contas do ano e objetivos.',producao:'O trabalho em curso e o que está para entrar: obras, propostas e avenças de manutenção.',rh:'As pessoas: equipas, férias, assiduidade e salários.',gestao:'Como se gere e o que se prepara para o futuro: reuniões de gestão, orçamento, distinção PME Líder e melhorias.'};
 function grupoEcra(id){var g=GRUPOS.filter(function(x){return x[0]===id})[0];
   return cabecalho(GRUPO_INTRO[id]||'',g[1])+g[2].map(function(s){try{return RESUMOS[s]?RESUMOS[s]():''}catch(e){return rCartao(s,ECRAS.filter(function(x){return x[0]===s})[0][1],'','Não foi possível calcular o resumo.')}}).join('')}
 function grupoDe(id){var g=GRUPOS.filter(function(x){return x[0]===id||x[2].indexOf(id)>=0})[0];return g?g[0]:null}
@@ -1535,7 +1580,7 @@ function render(forcar){
   desenhaMenu(r);
   var m=document.getElementById('main');
   if(!E.pronto&&!E.erro){m.innerHTML='<div class="vazio">A carregar os dados…</div>';return}
-  m.innerHTML=GRUPOS.some(function(g){return g[0]===r})?grupoEcra(r):r==='tesouraria'?tesouraria():r==='faturacao'?faturacaoEcra():r==='obras'?obras():r==='pessoas'?pessoasEcra():r==='ferias'?feriasEcra():r==='ponto'?pontoEcra():r==='comercial'?comercialEcra():r==='manutencao'?manutencaoEcra():r==='contabilidade'?contabilidadeEcra():r==='salarios'?salariosEcra():r==='objetivos'?objetivosEcra():r==='orcamento'?orcamentoEcra():r==='pme'?pmeEcra():r==='melhoria'?melhoriaEcra():r==='calculo'?calculo():vistaGeral();
+  m.innerHTML=GRUPOS.some(function(g){return g[0]===r})?grupoEcra(r):r==='tesouraria'?tesouraria():r==='faturacao'?faturacaoEcra():r==='obras'?obras():r==='pessoas'?pessoasEcra():r==='ferias'?feriasEcra():r==='ponto'?pontoEcra():r==='comercial'?comercialEcra():r==='manutencao'?manutencaoEcra():r==='contabilidade'?contabilidadeEcra():r==='salarios'?salariosEcra():r==='objetivos'?objetivosEcra():r==='orcamento'?orcamentoEcra():r==='pme'?pmeEcra():r==='melhoria'?melhoriaEcra():r==='reunioes'?reunioesEcra():r==='calculo'?calculo():vistaGeral();
   var l=E.log[0],ul=l&&l.quando||(ultimo()&&ultimo().lido_em);
   document.getElementById('ult').textContent=ul?hora(ul).replace(' às ',' · '):'sem dados';
   var et=ECRAS.filter(function(e){return e[0]===r})[0]||GRUPOS.filter(function(g){return g[0]===r}).map(function(g){return [g[0],g[1]]})[0];document.getElementById('mtit').textContent=et?et[1]:r==='calculo'?'Como é calculado':'';
@@ -1577,6 +1622,7 @@ var GLOSS=[
   [/subcontrat/i,'Subcontratos','Trabalho feito por outras empresas por conta da We Garden.']
 ];
 var INTRO={
+  reunioes:'O que se decidiu nas reuniões de gestão e o que ficou por fazer. Cada reunião tem o texto completo, um resumo, os próximos passos e sugestões tiradas dos livros de gestão.',
   tesouraria:'Este ecrã responde a uma pergunta: quanto dinheiro tem a empresa hoje, e como evoluiu. Junta o que está nos bancos, o que os clientes devem e o que há a pagar.',
   contabilidade:'Aqui estão as contas do ano mês a mês: quanto se faturou, onde se gastou e quanto sobrou. Vêm dos balancetes que a contabilidade prepara todos os meses. Atenção: os números só ficam definitivos depois do fecho do ano, que costuma baixar o lucro.',
   salarios:'Quanto custa o pessoal à empresa, mês a mês. Mostra só totais; não mostra o salário de ninguém.',
@@ -1642,7 +1688,7 @@ function alternarDobra(c){var f=c.classList.toggle('fechada');E.dobras[c.dataset
   document.addEventListener('keydown',function(e){if(e.key==='Escape')fecha();if((e.key==='Enter'||e.key===' ')&&e.target.matches&&e.target.matches('.dobra h2[role=button]')){e.preventDefault();alternarDobra(e.target.closest('.dobra'))}});
   if(MOVEL.addEventListener)MOVEL.addEventListener('change',function(){fecha();render(true)});
 })();
-document.getElementById('main').addEventListener('input',function(e){var d=e.target.dataset||{};if(e.target.id==='c-pesq'){E.cq=e.target.value;E.cLim=40;render(true);var ci=document.getElementById('c-pesq');if(ci){ci.focus();try{ci.setSelectionRange(E.cq.length,E.cq.length)}catch(x){}}return}if(d.f&&E.rasc)E.rasc[d.f]=e.target.value;if(d.ff&&e.target.type!=='checkbox')E.fform[d.ff]=e.target.value;if(d.ef){E.eqr[d.eq]=Object.assign({},equipa(d.eq)||{cor:'#91B03E',ramo:'manutencao'},E.eqr[d.eq]||{});E.eqr[d.eq][d.ef]=e.target.value}});
+document.getElementById('main').addEventListener('input',function(e){var d=e.target.dataset||{};if(d.reu&&E.reuForm){E.reuForm[d.reu]=e.target.value;return}if(e.target.id==='c-pesq'){E.cq=e.target.value;E.cLim=40;render(true);var ci=document.getElementById('c-pesq');if(ci){ci.focus();try{ci.setSelectionRange(E.cq.length,E.cq.length)}catch(x){}}return}if(d.f&&E.rasc)E.rasc[d.f]=e.target.value;if(d.ff&&e.target.type!=='checkbox')E.fform[d.ff]=e.target.value;if(d.ef){E.eqr[d.eq]=Object.assign({},equipa(d.eq)||{cor:'#91B03E',ramo:'manutencao'},E.eqr[d.eq]||{});E.eqr[d.eq][d.ef]=e.target.value}});
 document.getElementById('main').addEventListener('dragstart',function(e){var b=e.target.closest&&e.target.closest('[data-pes]');if(b&&E.podeEditar){e.dataTransfer.setData('text/plain',b.dataset.pes);e.dataTransfer.effectAllowed='move'}});
 document.getElementById('main').addEventListener('dragover',function(e){var z=e.target.closest&&e.target.closest('[data-drop]');if(z&&E.podeEditar){e.preventDefault();z.classList.add('alvo')}});
 document.getElementById('main').addEventListener('dragleave',function(e){var z=e.target.closest&&e.target.closest('[data-drop]');if(z)z.classList.remove('alvo')});
@@ -1651,6 +1697,15 @@ window.addEventListener('hashchange',function(){fechaOrigem();render(true);windo
 document.getElementById('main').addEventListener('focusout',function(){if(adiado)setTimeout(function(){render()},0)});
 document.getElementById('main').addEventListener('click',function(e){
   if(e.target.closest('.aj'))return;
+  var rb=e.target.closest('[data-reunova]');if(rb){E.reuForm={data:iso(new Date()),titulo:'',participantes:'',texto:''};E.reuMsg='';render(true);var tx=document.getElementById('p-reu-texto');if(tx)tx.focus();return}
+  rb=e.target.closest('[data-reucancelar]');if(rb){E.reuForm=null;render(true);return}
+  rb=e.target.closest('[data-reueditar]');if(rb){var rd=reuDoc(rb.dataset.reueditar);if(rd){E.reuForm={id:rd.id,data:rd.data,titulo:rd.titulo||'',participantes:rd.participantes||'',texto:rd.texto||''};render(true);window.scrollTo(0,0)}return}
+  rb=e.target.closest('[data-reuabrir]');if(rb){e.preventDefault();var cs=[].filter.call(document.querySelectorAll('#main section.cartao'),function(c){return (c.getAttribute('aria-label')||'').indexOf(rb.dataset.reuabrir)>=0})[0];if(cs){if(cs.classList.contains('fechada'))alternarDobra(cs);cs.scrollIntoView({behavior:'smooth'})}return}
+  rb=e.target.closest('[data-reuguardar]');if(rb){var F=E.reuForm;if(!F)return;if(!String(F.texto||'').trim()){E.reuMsg='Falta o texto da reunião.';render(true);return}if(!F.data){E.reuMsg='Falta a data.';render(true);return}
+    var ant=F.id?reuDoc(F.id):null,agora=new Date().toISOString(),id=F.id||(F.data+'-'+Math.random().toString(36).slice(2,6));
+    var doc=Object.assign({},ant||{},{id:id,data:F.data,titulo:String(F.titulo||'').trim()||null,participantes:String(F.participantes||'').trim()||null,texto:F.texto,alterado_em:agora,alterado_por:E.uid||null});
+    if(!ant){doc.criada_em=agora;doc.criada_por=E.uid||null}else if(ant.analise&&ant.texto!==F.texto)doc.reanalisar=true;
+    reuGravar(doc,ant?'Alterações guardadas.':'Reunião guardada. A análise aparece depois da próxima sincronização.').then(function(){E.reuForm=null;render(true)},function(){});return}
   var kb=e.target.closest('[data-kpis]');if(kb){E.kpis[kb.dataset.kpis]=true;render(true);return}
   var dt=e.target.closest('.dobra-t');if(dt&&MOVEL.matches&&!e.target.closest('button,a,input,select,textarea,.v,.aj')){var dc=dt.closest('.dobra');if(dc&&dc.dataset.dobra){alternarDobra(dc);return}}
   var b=e.target.closest('[data-per]');if(b){E.periodo=+b.dataset.per;render(true);return}
@@ -1693,6 +1748,7 @@ document.getElementById('main').addEventListener('click',function(e){
 });
 document.getElementById('main').addEventListener('change',function(e){
   var od=e.target.dataset||{};
+  if(od.reutodo){var pr=od.reutodo.split('|'),rd=reuDoc(pr[0]);if(rd&&rd.analise&&rd.analise.todos&&rd.analise.todos[+pr[1]]){var td=rd.analise.todos.map(function(t){return Object.assign({},t)});td[+pr[1]].estado=e.target.value;td[+pr[1]].alterado_em=new Date().toISOString();reuGravar(Object.assign({},rd,{analise:Object.assign({},rd.analise,{todos:td})}),'Estado atualizado.')}return}
   if(od.melest||od.melnota){
     var mi=Object.assign({},(E.mel&&E.mel.itens)||{}),mk=od.melest||od.melnota,mo=Object.assign({},mi[mk]||{});
     if(od.melest)mo.estado=e.target.value;else mo.nota=e.target.value.trim();
@@ -1733,6 +1789,7 @@ function arranque(){
     db.collection('tesouraria').onSnapshot(function(s){var d=[];s.docs.forEach(function(x){var y=x.data();(y.dias||[]).forEach(function(z){d.push(Object.assign({},z,{lido_em:y.lido_em,ficheiro:y.ficheiro}))})});d.sort(function(a,b){return a.data<b.data?-1:1});E.dias=d;E.pronto=true;render()},falha);
     db.collection('obras').onSnapshot(function(s){E.obras=s.docs.map(function(x){return x.data()});render()},falha);
     db.collection('obras_estado').onSnapshot(function(s){var m={};s.docs.forEach(function(x){m[x.id]=x.data()});E.estados=m;render()},falha);
+    db.collection('reunioes').onSnapshot(function(s){E.reu=s.docs.map(function(x){return Object.assign({id:x.id},x.data())});render()},falha);
     db.collection('pme').onSnapshot(function(s){s.docs.forEach(function(x){if(x.id==='lider')E.pme=x.data()});render()},falha);
     db.collection('ewp').onSnapshot(function(s){var m={};s.docs.forEach(function(x){m[x.id]=x.data()});E.ewp=m;render()},falha);
     db.collection('ponto').onSnapshot(function(s){var m={};s.docs.forEach(function(x){m[x.id]=x.data()});E.ponto=m;render()},falha);
