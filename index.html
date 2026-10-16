@@ -1500,6 +1500,24 @@ function reuGravar(doc,msg){
   return db.doc('reunioes/'+doc.id).set(d).then(function(){E.reuMsg=msg||'Guardado.';render(true)},function(){E.reuMsg='Não foi possível guardar. Tente outra vez.';render(true)});
 }
 function reuNome(lv){return MEL_LIVROS[lv]?MEL_LIVROS[lv][0]:lv}
+var PLANO_EST=['Decidido','Executar','Implementar','Boa ideia','A considerar','Já existe','Posto de parte'];
+function reuPlanoHtml(r,imprimir){
+  var P=r.plano;if(!P)return '';var dis=E.podeEditar&&!imprimir?'':' disabled';
+  function cel(b,i,m){var ref=esc(r.id)+'|'+b+'|'+i;
+    if(imprimir)return '<td>'+esc(m.estado)+'</td><td>'+esc(m.responsavel||'')+'</td><td>'+(m.prazo?(/^\d{4}-\d\d-\d\d$/.test(m.prazo)?dmy(m.prazo):esc(m.prazo)):'')+'</td>';
+    return '<td><select data-reuplano="'+ref+'|estado" aria-label="Estado"'+dis+'>'+PLANO_EST.map(function(o){return '<option'+(o===m.estado?' selected':'')+'>'+o+'</option>'}).join('')+'</select></td>'+
+      '<td><input type="text" list="reu-pessoas" data-reuplano="'+ref+'|responsavel" value="'+esc(m.responsavel||'')+'" placeholder="escolher" aria-label="Responsável" style="width:150px;min-height:36px;height:auto"'+dis+'></td>'+
+      '<td>'+(m.prazo&&!/^\d{4}-\d\d-\d\d$/.test(m.prazo)?'<span class="cod">'+esc(m.prazo)+'</span>':'<input type="date" data-reuplano="'+ref+'|prazo" value="'+esc(m.prazo||'')+'" aria-label="Prazo" style="width:140px;min-height:36px;height:auto"'+dis+'>')+'</td>'}
+  var h=(P.blocos||[]).map(function(B,b){return '<h4 style="margin:14px 0 4px">'+esc(B.nome)+'</h4><div class="rolo"><table style="min-width:'+(imprimir?'0':'760px')+';width:100%"><thead><tr><th>Medida</th><th>Estado</th><th>Responsável</th><th>Prazo</th></tr></thead><tbody>'+(B.medidas||[]).map(function(m,i){return '<tr><td style="white-space:normal;min-width:260px"><b>'+esc(m.medida)+'</b><br><span class="cod" style="display:inline-block;line-height:1.4">'+esc(m.detalhe||'')+(m.custo?' Custo: '+esc(m.custo)+'.':'')+'</span></td>'+cel(b,i,m)+'</tr>'}).join('')+'</tbody></table></div>'}).join('');
+  var pend=P.pendentes&&P.pendentes.length?'<h4 style="margin:14px 0 4px">Por decidir</h4>'+P.pendentes.map(function(x){return '<div class="nota">'+esc(x)+'</div>'}).join(''):'';
+  var anx=P.anexo?'<h4 style="margin:14px 0 4px">'+esc(P.anexo_titulo||'Anexo')+'</h4><div style="white-space:pre-wrap;line-height:1.55">'+esc(P.anexo)+'</div>':'';
+  return '<h3 style="margin:18px 0 2px">'+esc(P.titulo)+'</h3><div class="sobre">'+esc(P.situacao||'')+'</div>'+h+pend+anx;
+}
+function reuImprimirPlano(id){
+  var r=reuDoc(id);if(!r||!r.plano)return;var w=window.open('','_blank');if(!w)return;
+  w.document.write('<!doctype html><html lang="pt-PT"><head><meta charset="utf-8"><title>'+esc(r.plano.titulo)+'</title><style>body{font-family:Arial,sans-serif;font-size:12px;margin:24px;color:#222}h3{font-size:18px;margin:0}h4{font-size:14px;margin:16px 0 4px;color:#3b5214}table{border-collapse:collapse;width:100%}th,td{border-bottom:1px solid #ccc;padding:5px 6px;text-align:left;vertical-align:top}th{background:#eef2e0}.cod,.sobre{color:#555;font-size:11px}.nota{padding:3px 0}</style></head><body><div class="sobre">We Garden · Reunião de gestão de '+dmy(r.data)+'</div>'+reuPlanoHtml(r,true)+'</body></html>');
+  w.document.close();w.focus();setTimeout(function(){w.print()},300);
+}
 function reunioesEcra(){
   var L=reuLista(),T=reuTodos(),hoje=iso(new Date()),dis=E.podeEditar?'':' disabled',F=E.reuForm;
   var ab=T.filter(function(x){return x.t.estado!=='feito'}),at=ab.filter(function(x){return x.t.prazo&&x.t.prazo<hoje}),pt=L.filter(function(r){return !r.analise||r.reanalisar});
@@ -1513,9 +1531,9 @@ function reunioesEcra(){
     campo('reu-part','Quem esteve','<input id="p-reu-part" data-reu="participantes" type="text" value="'+esc(F.participantes||'')+'" placeholder="Nomes separados por vírgulas">',true)+
     campo('reu-texto','O que foi falado','<textarea id="p-reu-texto" data-reu="texto" rows="16" style="min-height:300px;padding:10px;line-height:1.5" placeholder="Escreva ou cole aqui as notas da reunião, como estiverem.">'+esc(F.texto||'')+'</textarea>',true)+
     '</div><div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap"><button type="button" class="ctl" data-reuguardar="1" style="background:var(--verde-esc);color:#fff;border-color:var(--verde-esc)">Guardar</button><button type="button" class="ctl" data-reucancelar="1">Cancelar</button></div><div class="sobre">O texto fica guardado tal como o escrever. Depois de guardar, a análise aparece na sincronização da manhã seguinte, ou logo, se pedir ao Claude para analisar a reunião.</div></section>'}
-  var tt='';
+  var tt='',dl0='<datalist id="reu-pessoas">'+ativos().map(function(p){return '<option value="'+esc(p.nome||p.nome_curto||'')+'">'}).join('')+'</datalist>';
   if(ab.length){ab.sort(function(a,b){return (a.t.prazo||'9999')<(b.t.prazo||'9999')?-1:1});
-    var dl='<datalist id="reu-pessoas">'+ativos().map(function(p){return '<option value="'+esc(p.nome||p.nome_curto||'')+'">'}).join('')+'</datalist>';
+    var dl='';
     tt='<section class="cartao" aria-label="Próximos passos em aberto"><h2>Próximos passos em aberto · '+ab.length+'</h2>'+dl+'<div class="rolo"><table style="min-width:760px"><thead><tr><th>O que fazer</th><th>Quem</th><th>Prazo</th><th>Reunião</th><th>Estado</th></tr></thead><tbody>'+ab.map(function(x){var late=x.t.prazo&&x.t.prazo<hoje;return '<tr><td style="white-space:normal;min-width:240px">'+esc(x.t.tarefa)+'</td>'+(E.podeEditar?'<td><input type="text" list="reu-pessoas" data-reuresp="'+esc(x.r.id)+'|'+x.i+'" value="'+esc(x.t.responsavel||'')+'" placeholder="escolher" aria-label="Responsável" style="width:170px;min-height:38px;height:auto"></td><td class="'+(late?'warn':'')+'"><input type="date" data-reuprazo="'+esc(x.r.id)+'|'+x.i+'" value="'+esc(x.t.prazo||'')+'" aria-label="Prazo" style="width:150px;min-height:38px;height:auto">'+(late?'<br><span class="sobre warn">atrasado</span>':'')+'</td>':'<td>'+esc(x.t.responsavel||'—')+'</td><td class="'+(late?'warn':'')+'">'+(x.t.prazo?dmy(x.t.prazo)+(late?' · atrasado':''):'<span class="mute">sem prazo</span>')+'</td>')+'<td><a href="#reunioes" data-reuabrir="'+esc(x.r.id)+'">'+dmy(x.r.data)+'</a></td><td><select data-reutodo="'+esc(x.r.id)+'|'+x.i+'" aria-label="Estado"'+dis+'>'+REU_EST.map(function(o){return '<option'+(o===(x.t.estado||'por fazer')?' selected':'')+'>'+o+'</option>'}).join('')+'</select></td></tr>'}).join('')+'</tbody></table></div>'+(E.podeEditar?'<div class="sobre">Escolha o responsável da lista ou escreva outro nome; o prazo e o responsável ficam guardados ao sair do campo.</div>':'')+'</section>'}
   function cartao(r){var a=r.analise,lista=function(v){return (v||[]).map(function(x){return '<div class="nota">'+esc(x)+'</div>'}).join('')};
     var tg=!a?'<span class="tag t-aviso">à espera de análise</span>':r.reanalisar?'<span class="tag t-aviso">texto alterado; análise por atualizar</span>':'<span class="tag t-curso">analisada</span>';
@@ -1526,10 +1544,11 @@ function reunioesEcra(){
       (a.perguntas&&a.perguntas.length?'<h3 style="margin:16px 0 6px">Ficou por esclarecer</h3>'+lista(a.perguntas):'')+
       '<div class="sobre" style="margin-top:10px">Análise feita pelo Claude em '+esc(hora(a.feita_em||''))+'. É uma proposta: confirme responsáveis e prazos.</div>'):'<div class="vazio">A análise ainda não foi feita.</div>';
     return '<section class="cartao" aria-label="Reunião de '+esc(dmy(r.data))+' '+esc(r.id)+'"><div class="cab"><div><div class="sobre">'+esc(r.participantes||'')+'</div><h2>Reunião de '+dmy(r.data)+(r.titulo?' · '+esc(r.titulo):'')+'</h2></div>'+tg+'</div>'+corpo+
+      (r.plano?'<div style="margin-top:6px">'+reuPlanoHtml(r)+'<div style="margin-top:10px"><button type="button" class="ctl" data-reuimprimir="'+esc(r.id)+'">Imprimir o plano</button></div></div>':'')+
       '<details style="margin-top:14px"><summary style="cursor:pointer;font-weight:600">O que foi falado, na íntegra</summary><div style="white-space:pre-wrap;line-height:1.55;margin-top:8px;max-width:90ch">'+esc(r.texto||'')+'</div></details>'+
       (E.podeEditar?'<div style="margin-top:10px"><button type="button" class="ctl" data-reueditar="'+esc(r.id)+'">Editar o texto</button></div>':'')+'</section>'}
   var intro='<p class="intro" style="margin-top:0">Escreva aqui o que se falou em cada reunião de gestão. O texto fica guardado na íntegra; a partir dele o Claude escreve um resumo, as decisões, os próximos passos com responsável e prazo, e sugestões de gestão baseadas nos sete livros do separador Melhorar a empresa.</p>';
-  return h+msg+(L.length||F?'':intro)+k+fm+tt+(L.length?L.map(cartao).join(''):(F?'':'<div class="cartao"><div class="vazio">Ainda não há reuniões. Carregue em “Nova reunião”.</div></div>'));
+  return h+msg+dl0+(L.length||F?'':intro)+k+fm+tt+(L.length?L.map(cartao).join(''):(F?'':'<div class="cartao"><div class="vazio">Ainda não há reuniões. Carregue em “Nova reunião”.</div></div>'));
 }
 
 /* ---------- armazém: planta, modelo 3D e controlo de stock ---------- */
@@ -1741,6 +1760,7 @@ document.getElementById('main').addEventListener('focusout',function(){if(adiado
 document.getElementById('main').addEventListener('click',function(e){
   if(e.target.closest('.aj'))return;
   var rb=e.target.closest('[data-reunova]');if(rb){E.reuForm={data:iso(new Date()),titulo:'',participantes:'',texto:''};E.reuMsg='';render(true);var tx=document.getElementById('p-reu-texto');if(tx)tx.focus();return}
+  rb=e.target.closest('[data-reuimprimir]');if(rb){reuImprimirPlano(rb.dataset.reuimprimir);return}
   rb=e.target.closest('[data-reucancelar]');if(rb){E.reuForm=null;render(true);return}
   rb=e.target.closest('[data-reueditar]');if(rb){var rd=reuDoc(rb.dataset.reueditar);if(rd){E.reuForm={id:rd.id,data:rd.data,titulo:rd.titulo||'',participantes:rd.participantes||'',texto:rd.texto||''};render(true);window.scrollTo(0,0)}return}
   rb=e.target.closest('[data-reuabrir]');if(rb){e.preventDefault();var cs=[].filter.call(document.querySelectorAll('#main section.cartao'),function(c){return (c.getAttribute('aria-label')||'').indexOf(rb.dataset.reuabrir)>=0})[0];if(cs){if(cs.classList.contains('fechada'))alternarDobra(cs);cs.scrollIntoView({behavior:'smooth'})}return}
@@ -1791,6 +1811,7 @@ document.getElementById('main').addEventListener('click',function(e){
 });
 document.getElementById('main').addEventListener('change',function(e){
   var od=e.target.dataset||{};
+  if(od.reuplano){var q=od.reuplano.split('|'),rp=reuDoc(q[0]);if(rp&&rp.plano&&rp.plano.blocos[+q[1]]&&rp.plano.blocos[+q[1]].medidas[+q[2]]){var pl=JSON.parse(JSON.stringify(rp.plano)),md=pl.blocos[+q[1]].medidas[+q[2]];md[q[3]]=String(e.target.value||'').trim()||null;md.alterado_em=new Date().toISOString();reuGravar(Object.assign({},rp,{plano:pl}),'Plano atualizado.')}return}
   if(od.reuresp||od.reuprazo){var pr2=(od.reuresp||od.reuprazo).split('|'),rd2=reuDoc(pr2[0]);if(rd2&&rd2.analise&&rd2.analise.todos&&rd2.analise.todos[+pr2[1]]){var td2=rd2.analise.todos.map(function(t){return Object.assign({},t)}),v2=String(e.target.value||'').trim()||null;td2[+pr2[1]][od.reuresp?'responsavel':'prazo']=v2;td2[+pr2[1]].alterado_em=new Date().toISOString();reuGravar(Object.assign({},rd2,{analise:Object.assign({},rd2.analise,{todos:td2})}),od.reuresp?'Responsável guardado.':'Prazo guardado.')}return}
   if(od.reutodo){var pr=od.reutodo.split('|'),rd=reuDoc(pr[0]);if(rd&&rd.analise&&rd.analise.todos&&rd.analise.todos[+pr[1]]){var td=rd.analise.todos.map(function(t){return Object.assign({},t)});td[+pr[1]].estado=e.target.value;td[+pr[1]].alterado_em=new Date().toISOString();reuGravar(Object.assign({},rd,{analise:Object.assign({},rd.analise,{todos:td})}),'Estado atualizado.')}return}
   if(od.melest||od.melnota){
