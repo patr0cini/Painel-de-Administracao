@@ -222,9 +222,9 @@ code{font-family:ui-monospace,Menlo,monospace;background:var(--poco);padding:1px
 (function(){
 'use strict';
 var SP_RESUMO='https://wegarden.sharepoint.com/sites/Administrativo/Documentos%20Partilhados/Diversos/Resumo%20Financeiro%20di%C3%A1rio.xlsx';
-var ECRAS=[['geral','Vista geral'],['tesouraria','Tesouraria'],['faturacao','Faturação'],['obras','Obras'],['pessoas','Pessoas e equipas'],['ferias','Férias'],['ponto','Ponto'],['comercial','Comercial'],['manutencao','Manutenção'],['contabilidade','Contabilidade'],['salarios','Salários'],['objetivos','Objetivos'],['orcamento','Orçamento 2027'],['pme','PME Líder'],['melhoria','Melhorar a empresa'],['reunioes','Reuniões de Gestão']];
+var ECRAS=[['geral','Vista geral'],['tesouraria','Tesouraria'],['faturacao','Faturação'],['obras','Obras'],['pessoas','Pessoas e equipas'],['ferias','Férias'],['ponto','Ponto'],['comercial','Comercial'],['manutencao','Manutenção'],['contabilidade','Contabilidade'],['salarios','Salários'],['objetivos','Objetivos'],['orcamento','Orçamento 2027'],['pme','PME Líder'],['melhoria','Melhorar a empresa'],['reunioes','Reuniões de Gestão'],['armazem','Armazém']];
 // Menu lateral: ecrãs agrupados por tipo; cada grupo abre como uma lista dentro do menu.
-var GRUPOS=[['financas','Finanças',['tesouraria','faturacao','contabilidade','objetivos']],['producao','Produção / Comercial',['obras','comercial','manutencao']],['rh','Recursos Humanos',['pessoas','ferias','ponto','salarios']],['gestao','Gestão',['reunioes','orcamento','pme','melhoria']]];
+var GRUPOS=[['financas','Finanças',['tesouraria','faturacao','contabilidade','objetivos']],['producao','Produção / Comercial',['obras','comercial','manutencao']],['rh','Recursos Humanos',['pessoas','ferias','ponto','salarios']],['gestao','Gestão',['reunioes','armazem','orcamento','pme','melhoria']]];
 var MESES=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
 var TIPOS={materiais:'Materiais e subempreitadas',pessoal:'Pessoal',transportes:'Transportes',estrutura:'Custos de estrutura',irc:'IRC'};
 var E={reu:[],reuForm:null,reuMsg:'',pme:null,ewp:{},ponto:{},dobras:{},kpis:{},mel:{},melMsg:'',melLv:'',melEst:'',orc:{},orcMsg:'',plan:{},mVista:'rent',manObra:{},cli:[],sal:{},cont:{},objs:{},dl:null,man:{},mAno:null,mEq:'',mLim:30,com:{},pipe:null,cAno:null,cq:'',cProg:'',cResp:'',cGrau:'',cLim:40,fed:[],fsel:null,fform:{},fmsg:'',fmsgErro:false,fLista:[],eqAbrir:false,eqr:{},eqmsg:'',apagar:null,apagarEq:null,pessoas:[],equipas:[],ferias:[],pv:'org',psel:null,rasc:null,pmsg:'',fMes:null,fTodos:false,fEq:'',nomes:{},uid:null,dias:[],obras:[],estados:{},obj:{},log:[],pronto:false,erro:null,podeEditar:false,periodo:90,fEstado:'Todas',fAno:'',sel:null};
@@ -1512,14 +1512,35 @@ function reunioesEcra(){
   return h+msg+(L.length||F?'':intro)+k+fm+tt+(L.length?L.map(cartao).join(''):(F?'':'<div class="cartao"><div class="vazio">Ainda não há reuniões. Carregue em “Nova reunião”.</div></div>'));
 }
 
+/* ---------- armazém: planta, modelo 3D e controlo de stock ---------- */
+// A página do armazém é um ficheiro à parte (armazem/index.html), aberto aqui dentro de uma moldura.
+// O ecrã não é redesenhado enquanto está aberto, para o modelo 3D não recomeçar a cada atualização de dados.
+var ARM_ABERTO=[
+  'Altura livre debaixo das vigas e iluminação, para fixar os níveis das racks.',
+  'Confirmar que o bloco social fica na parede oposta ao portão.',
+  'Hora limite para as requisições de material (proposta: 15h00 do dia anterior).',
+  'Onde se regista o stock: folha no Microsoft 365 ou módulo nas aplicações da We Garden.',
+  'Quem é o responsável de armazém e quem o substitui.',
+  'Medidas da fachada: faltam confirmar 17 cm (o levantamento soma 9,83 m em 10 m).',
+  'Orientação a norte e terreno à volta, para modelar o exterior (viveiro, fitofármacos, big bags, lavagem, contentor de óleos).'
+];
+function armazemEcra(){
+  var h=cabecalho('Armazém em construção · revisão 3, setembro de 2026','Armazém','<a class="ctl" style="display:inline-flex;align-items:center;text-decoration:none;color:inherit" href="armazem/index.html" target="_blank" rel="noopener">Abrir em ecrã inteiro</a>');
+  var intro='<p class="intro" style="margin-top:0">O modelo do novo armazém de 20 × 10 m: a planta com a organização proposta, um modelo 3D que se pode rodar e aproximar, e o procedimento de organização e controlo de stock. Use os botões dentro do modelo para mudar de vista.</p>';
+  var fr='<div class="cartao" style="padding:0;overflow:hidden"><iframe id="armazem-frame" src="armazem/index.html" title="Armazém: planta, modelo 3D e controlo de stock" style="display:block;width:100%;height:calc(100vh - 220px);min-height:560px;border:0" loading="lazy"></iframe></div>';
+  var ab='<section class="cartao" aria-label="Em aberto"><h2>Por decidir no armazém · '+ARM_ABERTO.length+'</h2>'+ARM_ABERTO.map(function(x){return '<div class="nota">'+esc(x)+'</div>'}).join('')+'<div class="sobre">Pontos em aberto registados no projeto do modelo. Quando forem decididos, diga ao Claude para atualizar o modelo e esta lista.</div></section>';
+  return h+intro+fr+ab;
+}
+
 /* ---------- navegação ---------- */
 
-function rota(){var h=(location.hash||'').replace('#','');return ['geral','financas','producao','rh','gestao','tesouraria','faturacao','obras','pessoas','ferias','ponto','comercial','manutencao','contabilidade','salarios','objetivos','orcamento','pme','melhoria','reunioes','calculo'].indexOf(h)>=0?h:'geral'}
+function rota(){var h=(location.hash||'').replace('#','');return ['geral','financas','producao','rh','gestao','tesouraria','faturacao','obras','pessoas','ferias','ponto','comercial','manutencao','contabilidade','salarios','objetivos','orcamento','pme','melhoria','reunioes','armazem','calculo'].indexOf(h)>=0?h:'geral'}
 var adiado=false;
 /* ---------- painéis de grupo: um cartão de resumo por separador ---------- */
 function rPoco(v,l,cls){return '<div class="poco"><span class="'+(cls||'')+'">'+v+'</span><small>'+l+'</small></div>'}
 function rCartao(id,tit,pocos,vazio){var e=ECRAS.filter(function(x){return x[0]===id})[0];return '<section class="cartao" aria-label="'+esc(e[1])+'"><div class="cab"><h2>'+tit+'</h2><a href="#'+id+'">Ver '+esc(e[1])+'</a></div>'+(pocos?'<div class="grelha" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px">'+pocos+'</div>':'<div class="vazio">'+(vazio||'Ainda sem dados.')+'</div>')+'</section>'}
 var RESUMOS={
+  armazem:function(){return rCartao('armazem','Armazém · revisão 3',rPoco('20 × 10 m','Área do armazém')+rPoco('4 racks','Racks altas de 5 m')+rPoco(String(ARM_ABERTO.length),'Pontos por decidir',ARM_ABERTO.length?'warn':''))},
   reunioes:function(){var L=reuLista(),T=reuTodos(),h=iso(new Date()),ab=T.filter(function(x){return x.t.estado!=='feito'}),at=ab.filter(function(x){return x.t.prazo&&x.t.prazo<h});if(!L.length)return rCartao('reunioes','Reuniões de Gestão','','Ainda não há reuniões registadas.');
     return rCartao('reunioes','Reuniões de Gestão · última a '+dmy(L[0].data),rPoco(String(L.length),'Reuniões registadas')+rPoco(String(ab.length),'Próximos passos por fazer')+rPoco(String(at.length),'Com o prazo ultrapassado',at.length?'warn':'')+rPoco(String(L.filter(function(r){return !r.analise||r.reanalisar}).length),'À espera de análise'))},
   tesouraria:function(){var u=ultimo();if(!u)return rCartao('tesouraria','Tesouraria');var bt=bancoTotal(u),sf=u.saldo_final.valor,min=E.obj.saldo_minimo;
@@ -1554,7 +1575,7 @@ var RESUMOS={
   melhoria:function(){var L=melLista(melDados()),I=(E.mel&&E.mel.itens)||{},c={};MEL_EST.forEach(function(e){c[e]=0});L.forEach(function(x){c[(I[x.id]&&I[x.id].estado)||MEL_EST[0]]++});
     return rCartao('melhoria','Melhorar a empresa',rPoco(L.length,'Sugestões')+rPoco(c['Por decidir'],'Por decidir',c['Por decidir']?'warn':'')+rPoco(c['Aceite']+c['Em curso'],'Aceites ou em curso')+rPoco(c['Feita'],'Feitas',c['Feita']?'ok':''))}
 };
-var GRUPO_INTRO={financas:'O dinheiro da empresa: saldos, faturação, contas do ano e objetivos.',producao:'O trabalho em curso e o que está para entrar: obras, propostas e avenças de manutenção.',rh:'As pessoas: equipas, férias, assiduidade e salários.',gestao:'Como se gere e o que se prepara para o futuro: reuniões de gestão, orçamento, distinção PME Líder e melhorias.'};
+var GRUPO_INTRO={financas:'O dinheiro da empresa: saldos, faturação, contas do ano e objetivos.',producao:'O trabalho em curso e o que está para entrar: obras, propostas e avenças de manutenção.',rh:'As pessoas: equipas, férias, assiduidade e salários.',gestao:'Como se gere e o que se prepara para o futuro: reuniões de gestão, o novo armazém, orçamento, distinção PME Líder e melhorias.'};
 function grupoEcra(id){var g=GRUPOS.filter(function(x){return x[0]===id})[0];
   return cabecalho(GRUPO_INTRO[id]||'',g[1])+g[2].map(function(s){try{return RESUMOS[s]?RESUMOS[s]():''}catch(e){return rCartao(s,ECRAS.filter(function(x){return x[0]===s})[0][1],'','Não foi possível calcular o resumo.')}}).join('')}
 function grupoDe(id){var g=GRUPOS.filter(function(x){return x[0]===id||x[2].indexOf(id)>=0})[0];return g?g[0]:null}
@@ -1580,8 +1601,9 @@ function render(forcar){
   var r=rota();prov=[];
   desenhaMenu(r);
   var m=document.getElementById('main');
+  if(r==='armazem'&&document.getElementById('armazem-frame')&&!forcar)return;
   if(!E.pronto&&!E.erro){m.innerHTML='<div class="vazio">A carregar os dados…</div>';return}
-  m.innerHTML=GRUPOS.some(function(g){return g[0]===r})?grupoEcra(r):r==='tesouraria'?tesouraria():r==='faturacao'?faturacaoEcra():r==='obras'?obras():r==='pessoas'?pessoasEcra():r==='ferias'?feriasEcra():r==='ponto'?pontoEcra():r==='comercial'?comercialEcra():r==='manutencao'?manutencaoEcra():r==='contabilidade'?contabilidadeEcra():r==='salarios'?salariosEcra():r==='objetivos'?objetivosEcra():r==='orcamento'?orcamentoEcra():r==='pme'?pmeEcra():r==='melhoria'?melhoriaEcra():r==='reunioes'?reunioesEcra():r==='calculo'?calculo():vistaGeral();
+  m.innerHTML=GRUPOS.some(function(g){return g[0]===r})?grupoEcra(r):r==='tesouraria'?tesouraria():r==='faturacao'?faturacaoEcra():r==='obras'?obras():r==='pessoas'?pessoasEcra():r==='ferias'?feriasEcra():r==='ponto'?pontoEcra():r==='comercial'?comercialEcra():r==='manutencao'?manutencaoEcra():r==='contabilidade'?contabilidadeEcra():r==='salarios'?salariosEcra():r==='objetivos'?objetivosEcra():r==='orcamento'?orcamentoEcra():r==='pme'?pmeEcra():r==='melhoria'?melhoriaEcra():r==='reunioes'?reunioesEcra():r==='armazem'?armazemEcra():r==='calculo'?calculo():vistaGeral();
   var l=E.log[0],ul=l&&l.quando||(ultimo()&&ultimo().lido_em);
   document.getElementById('ult').textContent=ul?hora(ul).replace(' às ',' · '):'sem dados';
   var et=ECRAS.filter(function(e){return e[0]===r})[0]||GRUPOS.filter(function(g){return g[0]===r}).map(function(g){return [g[0],g[1]]})[0];document.getElementById('mtit').textContent=et?et[1]:r==='calculo'?'Como é calculado':'';
