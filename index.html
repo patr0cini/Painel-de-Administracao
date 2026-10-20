@@ -1492,7 +1492,9 @@ function pmeEcra(){
 // A administração escreve o que se falou; a análise (resumo, decisões, próximos passos e sugestões)
 // é escrita pelo Claude e gravada no campo "analise" do mesmo documento.
 var REU_EST=['por fazer','em curso','feito'];
-function reuLista(){return (E.reu||[]).slice().sort(function(a,b){return (b.data||'')>(a.data||'')?1:(b.data||'')<(a.data||'')?-1:(b.criada_em||'')>(a.criada_em||'')?1:-1})}
+function reuTodas(){return (E.reu||[]).slice().sort(function(a,b){return (b.data||'')>(a.data||'')?1:(b.data||'')<(a.data||'')?-1:(b.criada_em||'')>(a.criada_em||'')?1:-1})}
+function reuLista(){return reuTodas().filter(function(r){return !!r.texto})}
+function reuMarcadas(){return reuTodas().filter(function(r){return !r.texto}).reverse()}
 function reuTodos(){var L=[];reuLista().forEach(function(r){((r.analise&&r.analise.todos)||[]).forEach(function(t,i){L.push({r:r,t:t,i:i})})});return L}
 function reuDoc(id){return (E.reu||[]).filter(function(r){return r.id===id})[0]}
 function reuGravar(doc,msg){
@@ -1531,6 +1533,10 @@ function reunioesEcra(){
     campo('reu-part','Quem esteve','<input id="p-reu-part" data-reu="participantes" type="text" value="'+esc(F.participantes||'')+'" placeholder="Nomes separados por vírgulas">',true)+
     campo('reu-texto','O que foi falado','<textarea id="p-reu-texto" data-reu="texto" rows="16" style="min-height:300px;padding:10px;line-height:1.5" placeholder="Escreva ou cole aqui as notas da reunião, como estiverem.">'+esc(F.texto||'')+'</textarea>',true)+
     '</div><div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap"><button type="button" class="ctl" data-reuguardar="1" style="background:var(--verde-esc);color:#fff;border-color:var(--verde-esc)">Guardar</button><button type="button" class="ctl" data-reucancelar="1">Cancelar</button></div><div class="sobre">O texto fica guardado tal como o escrever. Depois de guardar, a análise aparece na sincronização da manhã seguinte, ou logo, se pedir ao Claude para analisar a reunião.</div></section>'}
+  var M=reuMarcadas(),mc=M.map(function(r){var O=r.ordem||[];
+    return '<section class="cartao" style="border-color:var(--verde-esc)" aria-label="Próxima reunião '+esc(r.id)+'"><div class="cab"><div><div class="sobre">'+esc(r.participantes||'')+'</div><h2>Próxima reunião · '+dmy(r.data)+(r.titulo?' · '+esc(r.titulo):'')+'</h2></div><span class="tag t-fim">marcada</span></div>'+
+      '<h3 style="margin:12px 0 6px">Ordem de trabalhos</h3>'+(O.length?O.map(function(o,i){return '<div class="nota cab" style="align-items:flex-start"><span><b>'+(i+1)+'. '+esc(o.titulo)+'</b>'+(o.tipo?' <span class="tag '+(o.tipo==='decisão'?'t-aviso':'t-fim')+'">'+esc(o.tipo)+'</span>':'')+(o.notas?'<br><span class="cod" style="display:inline-block;line-height:1.45;white-space:pre-wrap">'+esc(o.notas)+'</span>':'')+'</span>'+(E.podeEditar?'<button type="button" class="ctl" data-reuordemx="'+esc(r.id)+'|'+i+'" aria-label="Retirar este ponto" style="min-height:32px;padding:0 10px">Retirar</button>':'')+'</div>'}).join(''):'<div class="vazio">Ainda sem pontos.</div>')+
+      (E.podeEditar?'<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><input type="text" id="reu-novo-'+esc(r.id)+'" placeholder="Novo ponto da ordem de trabalhos" aria-label="Novo ponto" style="flex:1 1 260px;min-height:40px;height:auto"><button type="button" class="ctl" data-reuordem="'+esc(r.id)+'">Acrescentar</button></div><div style="margin-top:12px"><button type="button" class="ctl" data-reuata="'+esc(r.id)+'" style="background:var(--verde-esc);color:#fff;border-color:var(--verde-esc)">Escrever a ata desta reunião</button></div>':'')+'</section>'}).join('');
   var tt='',dl0='<datalist id="reu-pessoas">'+ativos().map(function(p){return '<option value="'+esc(p.nome||p.nome_curto||'')+'">'}).join('')+'</datalist>';
   if(ab.length){ab.sort(function(a,b){return (a.t.prazo||'9999')<(b.t.prazo||'9999')?-1:1});
     var dl='';
@@ -1548,7 +1554,7 @@ function reunioesEcra(){
       '<details style="margin-top:14px"><summary style="cursor:pointer;font-weight:600">O que foi falado, na íntegra</summary><div style="white-space:pre-wrap;line-height:1.55;margin-top:8px;max-width:90ch">'+esc(r.texto||'')+'</div></details>'+
       (E.podeEditar?'<div style="margin-top:10px"><button type="button" class="ctl" data-reueditar="'+esc(r.id)+'">Editar o texto</button></div>':'')+'</section>'}
   var intro='<p class="intro" style="margin-top:0">Escreva aqui o que se falou em cada reunião de gestão. O texto fica guardado na íntegra; a partir dele o Claude escreve um resumo, as decisões, os próximos passos com responsável e prazo, e sugestões de gestão baseadas nos sete livros do separador Melhorar a empresa.</p>';
-  return h+msg+dl0+(L.length||F?'':intro)+k+fm+tt+(L.length?L.map(cartao).join(''):(F?'':'<div class="cartao"><div class="vazio">Ainda não há reuniões. Carregue em “Nova reunião”.</div></div>'));
+  return h+msg+dl0+(L.length||F||M.length?'':intro)+k+fm+mc+tt+(L.length?L.map(cartao).join(''):(F?'':'<div class="cartao"><div class="vazio">Ainda não há reuniões. Carregue em “Nova reunião”.</div></div>'));
 }
 
 /* ---------- armazém: planta, modelo 3D e controlo de stock ---------- */
@@ -1581,7 +1587,7 @@ function rCartao(id,tit,pocos,vazio){var e=ECRAS.filter(function(x){return x[0]=
 var RESUMOS={
   armazem:function(){return rCartao('armazem','Armazém · revisão 3',rPoco('20 × 10 m','Área do armazém')+rPoco('4 racks','Racks altas de 5 m')+rPoco(String(ARM_ABERTO.length),'Pontos por decidir',ARM_ABERTO.length?'warn':''))},
   reunioes:function(){var L=reuLista(),T=reuTodos(),h=iso(new Date()),ab=T.filter(function(x){return x.t.estado!=='feito'}),at=ab.filter(function(x){return x.t.prazo&&x.t.prazo<h});if(!L.length)return rCartao('reunioes','Reuniões de Gestão','','Ainda não há reuniões registadas.');
-    return rCartao('reunioes','Reuniões de Gestão · última a '+dmy(L[0].data),rPoco(String(L.length),'Reuniões registadas')+rPoco(String(ab.length),'Próximos passos por fazer')+rPoco(String(at.length),'Com o prazo ultrapassado',at.length?'warn':'')+rPoco(String(L.filter(function(r){return !r.analise||r.reanalisar}).length),'À espera de análise'))},
+    return rCartao('reunioes','Reuniões de Gestão · última a '+dmy(L[0].data),rPoco(String(L.length),'Reuniões registadas')+rPoco(String(ab.length),'Próximos passos por fazer')+rPoco(String(at.length),'Com o prazo ultrapassado',at.length?'warn':'')+rPoco(String(L.filter(function(r){return !r.analise||r.reanalisar}).length),'À espera de análise')+(reuMarcadas().length?rPoco(dmy(reuMarcadas()[0].data),'Próxima reunião'):''))},
   tesouraria:function(){var u=ultimo();if(!u)return rCartao('tesouraria','Tesouraria');var bt=bancoTotal(u),sf=u.saldo_final.valor,min=E.obj.saldo_minimo;
     return rCartao('tesouraria','Tesouraria · folha de '+dmy(u.data),rPoco(eur0(bt),'Dinheiro nos bancos')+rPoco(eur0(sf),'Saldo final'+(min!=null?' · mínimo '+eur0(min):''),min!=null&&sf<min?'warn':'')+rPoco(eur0(soma(u.receber)),'A receber de clientes')+rPoco(eur0(soma(u.pagar)),'A pagar'))},
   faturacao:function(){var u=fatUlt();if(!u)return rCartao('faturacao','Faturação');var f=u.faturacao,A=fatMapa(f.ano),ano=+(f.ano.ate||u.data).slice(0,4),cmp=f.fecho&&f.anterior&&f.anterior.ate&&+f.anterior.ate.slice(0,4)===ano-1,tF=cmp?fatSemZC(f.fecho):0,tP=cmp?fatSemZC(f.anterior):0;
@@ -1760,6 +1766,9 @@ document.getElementById('main').addEventListener('focusout',function(){if(adiado
 document.getElementById('main').addEventListener('click',function(e){
   if(e.target.closest('.aj'))return;
   var rb=e.target.closest('[data-reunova]');if(rb){E.reuForm={data:iso(new Date()),titulo:'',participantes:'',texto:''};E.reuMsg='';render(true);var tx=document.getElementById('p-reu-texto');if(tx)tx.focus();return}
+  rb=e.target.closest('[data-reuordem]');if(rb){var ro=reuDoc(rb.dataset.reuordem),inp=document.getElementById('reu-novo-'+rb.dataset.reuordem),tx2=inp&&String(inp.value||'').trim();if(ro&&tx2){reuGravar(Object.assign({},ro,{ordem:(ro.ordem||[]).concat([{titulo:tx2,acrescentado_em:new Date().toISOString(),por:E.uid||null}])}),'Ponto acrescentado.')}return}
+  rb=e.target.closest('[data-reuordemx]');if(rb){var qx=rb.dataset.reuordemx.split('|'),rx=reuDoc(qx[0]);if(rx&&rx.ordem){var ox=rx.ordem.slice();ox.splice(+qx[1],1);reuGravar(Object.assign({},rx,{ordem:ox}),'Ponto retirado.')}return}
+  rb=e.target.closest('[data-reuata]');if(rb){var ra=reuDoc(rb.dataset.reuata);if(ra){E.reuForm={id:ra.id,data:ra.data,titulo:ra.titulo||'',participantes:ra.participantes||'',texto:''};render(true);window.scrollTo(0,0);var tx3=document.getElementById('p-reu-texto');if(tx3)tx3.focus()}return}
   rb=e.target.closest('[data-reuimprimir]');if(rb){reuImprimirPlano(rb.dataset.reuimprimir);return}
   rb=e.target.closest('[data-reucancelar]');if(rb){E.reuForm=null;render(true);return}
   rb=e.target.closest('[data-reueditar]');if(rb){var rd=reuDoc(rb.dataset.reueditar);if(rd){E.reuForm={id:rd.id,data:rd.data,titulo:rd.titulo||'',participantes:rd.participantes||'',texto:rd.texto||''};render(true);window.scrollTo(0,0)}return}
@@ -1767,7 +1776,7 @@ document.getElementById('main').addEventListener('click',function(e){
   rb=e.target.closest('[data-reuguardar]');if(rb){var F=E.reuForm;if(!F)return;if(!String(F.texto||'').trim()){E.reuMsg='Falta o texto da reunião.';render(true);return}if(!F.data){E.reuMsg='Falta a data.';render(true);return}
     var ant=F.id?reuDoc(F.id):null,agora=new Date().toISOString(),id=F.id||(F.data+'-'+Math.random().toString(36).slice(2,6));
     var doc=Object.assign({},ant||{},{id:id,data:F.data,titulo:String(F.titulo||'').trim()||null,participantes:String(F.participantes||'').trim()||null,texto:F.texto,alterado_em:agora,alterado_por:E.uid||null});
-    if(!ant){doc.criada_em=agora;doc.criada_por=E.uid||null}else if(ant.analise&&ant.texto!==F.texto)doc.reanalisar=true;
+    if(!ant||!ant.texto){doc.criada_em=doc.criada_em||agora;doc.criada_por=doc.criada_por||E.uid||null;doc.estado=null}else if(ant.analise&&ant.texto!==F.texto)doc.reanalisar=true;
     reuGravar(doc,ant?'Alterações guardadas.':'Reunião guardada. A análise aparece depois da próxima sincronização.').then(function(){E.reuForm=null;render(true)},function(){});return}
   var kb=e.target.closest('[data-kpis]');if(kb){E.kpis[kb.dataset.kpis]=true;render(true);return}
   var dt=e.target.closest('.dobra-t');if(dt&&MOVEL.matches&&!e.target.closest('button,a,input,select,textarea,.v,.aj')){var dc=dt.closest('.dobra');if(dc&&dc.dataset.dobra){alternarDobra(dc);return}}
